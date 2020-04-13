@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"sort"
 	"time"
 )
 
@@ -23,16 +24,30 @@ func handleNews(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal("parsing", err)
 	}
-	articles, err := getArticles()
+
+	catMap := make(map[string]struct{})
+	for _, s := range sources {
+		for _, c := range s.Categories {
+			catMap[c] = struct{}{}
+		}
+	}
+	cats := []string{}
+	for c := range catMap {
+		cats = append(cats, c)
+	}
+	sort.Strings(cats)
+
+	articles, err := getArticles(r.URL.Query().Get("cat"))
 	if err != nil {
 		log.Fatal("parsing", err)
 	}
 	articles = LayoutArticles(articles)
 	h := Homepage{
-		Title:    "The Webpage",
-		Date:     time.Now().Format("Mon 02 Jan 2006"),
-		Sources:  sources,
-		Articles: articles,
+		Title:      "The Webpage",
+		Date:       time.Now().Format("Mon 02 Jan 2006"),
+		Sources:    sources,
+		Categories: cats,
+		Articles:   articles,
 	}
 	err = t.Execute(w, h)
 	if err != nil {
@@ -41,8 +56,9 @@ func handleNews(w http.ResponseWriter, r *http.Request) {
 }
 
 type Homepage struct {
-	Title    string
-	Date     string
-	Sources  []Source
-	Articles []Article
+	Title      string
+	Date       string
+	Categories []string
+	Sources    []Source
+	Articles   []Article
 }

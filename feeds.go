@@ -5,15 +5,18 @@ import (
 	"github.com/mmcdole/gofeed"
 	"golang.org/x/net/html"
 	"golang.org/x/sync/errgroup"
+	"log"
 	"sort"
 	"strings"
 	"time"
 )
 
 type Source struct {
-	Name    string
-	URL     string
-	FeedURL string
+	Name       string
+	URL        string
+	FeedURL    string
+	Categories []string
+	ForceFetch bool
 }
 
 type Article struct {
@@ -31,41 +34,65 @@ type Article struct {
 
 var sources = []Source{
 	{
-		Name:    "Vox",
-		URL:     "https://vox.com",
-		FeedURL: "https://www.vox.com/rss/index.xml",
+		Name:       "Vox",
+		URL:        "https://vox.com",
+		FeedURL:    "https://www.vox.com/rss/index.xml",
+		Categories: []string{"news", "opinion"},
 	},
 	{
-		Name:    "The Verge",
-		URL:     "https://theverge.com",
-		FeedURL: "https://www.theverge.com/rss/index.xml",
+		Name:       "The Verge",
+		URL:        "https://theverge.com",
+		FeedURL:    "https://www.theverge.com/rss/index.xml",
+		Categories: []string{"tech", "games", "electronics"},
+		ForceFetch: true,
 	},
 	{
-		Name:    "Polygon",
-		URL:     "https://polygon.com",
-		FeedURL: "https://www.polygon.com/rss/index.xml",
+		Name:       "Polygon",
+		URL:        "https://polygon.com",
+		FeedURL:    "https://www.polygon.com/rss/index.xml",
+		Categories: []string{"tech", "games"},
 	},
 	{
-		Name:    "TechCrunch",
-		URL:     "https://techcrunch.com",
-		FeedURL: "http://feeds.feedburner.com/TechCrunch/",
+		Name:       "TechCrunch",
+		URL:        "https://techcrunch.com",
+		FeedURL:    "http://feeds.feedburner.com/TechCrunch/",
+		Categories: []string{"tech", "startups"},
 	},
 	{
-		Name:    "BBC News",
-		URL:     "https://bbc.co.uk/news",
-		FeedURL: "http://feeds.bbci.co.uk/news/rss.xml",
+		Name:       "BBC News",
+		URL:        "https://bbc.co.uk/news",
+		FeedURL:    "http://feeds.bbci.co.uk/news/rss.xml",
+		Categories: []string{"news"},
 	},
 	{
-		Name:    "The Guardian",
-		URL:     "https://theguardian.co.uk",
-		FeedURL: "https://www.theguardian.com/uk/rss",
+		Name:       "The Guardian",
+		URL:        "https://theguardian.co.uk",
+		FeedURL:    "https://www.theguardian.com/uk/rss",
+		Categories: []string{"news", "opinion"},
+	},
+	{
+		Name:       "lobste.rs",
+		URL:        "https://lobste.rs",
+		FeedURL:    "https://lobste.rs/rss",
+		Categories: []string{"tech", "programming", "forums"},
 	},
 }
 
-func getArticles() ([]Article, error) {
+func getArticles(c string) ([]Article, error) {
 	eg := errgroup.Group{}
 	articles := make(chan Article, 1024^2)
 	for _, s := range sources {
+		if c != "" {
+			var ok bool
+			for _, cat := range s.Categories {
+				if cat == c {
+					ok = true
+				}
+			}
+			if !ok {
+				continue
+			}
+		}
 		s := s
 		eg.Go(func() error {
 			fp := gofeed.NewParser()
@@ -77,13 +104,14 @@ func getArticles() ([]Article, error) {
 			g := errgroup.Group{}
 			for _, item := range feed.Items {
 				item := item
+				s := s
 				g.Go(func() error {
 					var imageURL string
 					if item.Image != nil {
 						imageURL = item.Image.URL
 					}
 					var content string
-					if len(item.Content) < 100 {
+					if len(item.Content) < 100 || s.ForceFetch {
 						text, image, ok, err := cache.Get(item.Link)
 						if err != nil {
 							return err
@@ -95,7 +123,8 @@ func getArticles() ([]Article, error) {
 							g := goose.New()
 							article, err := g.ExtractFromURL(item.Link)
 							if err != nil {
-								return err
+								log.Print(err)
+								return nil
 							}
 							content = article.CleanedText
 							imageURL = article.TopImage

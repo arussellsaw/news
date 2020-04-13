@@ -101,6 +101,7 @@ h5 {
     font-size: 0.7rem;
     max-height: 1024px;
     overflow-y: scroll;
+    overflow-x: hidden;
     border-right: 0.5px solid black;
 }
 
@@ -119,6 +120,7 @@ h5 {
     padding-right: 0.1rem;
     column-count: auto;
     column-width: 10rem;
+    hyphens: auto;
 }
 
 .overline {

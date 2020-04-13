@@ -49,7 +49,7 @@ func handleDitherImage(w http.ResponseWriter, r *http.Request) {
 			},
 		},
 	}
-	dithered := d.Monochrome(newImage, 1.18)
+	dithered := d.Monochrome(newImage, 1)
 
 	buffer := new(bytes.Buffer)
 	if err := jpeg.Encode(buffer, dithered, nil); err != nil {

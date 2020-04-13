@@ -7,9 +7,9 @@
 <body>
 <div class="container is-fluid">
     <div class="bar level" style="margin-top:0.5rem;">
-        {{range .Sources}}
+        {{range .Categories}}
             <div class="level-item has-text-centered has-text-weight-bold is-uppercase" >
-                <a href="{{.URL}}"><p style="font-size: 0.7rem">{{.Name}}</p></a>
+                <a href="/?cat={{.}}"><p style="font-size: 0.7rem">{{.}}</p></a>
             </div>
         {{end}}
     </div>

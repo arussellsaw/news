@@ -1,0 +1,83 @@
+<html lang="en">
+<head>
+    <title>{{.Title}}</title>
+    <link rel="stylesheet" href="/static/bulma.min.css" type="text/css"/>
+    <link rel="stylesheet" href="/static/main.css" type="text/css"/>
+</head>
+<body>
+<div class="container is-fluid">
+    <div class="bar level" style="margin-top:0.5rem;">
+        {{range .Sources}}
+            <div class="level-item has-text-centered has-text-weight-bold is-uppercase" >
+                <a href="{{.URL}}"><p style="font-size: 0.7rem">{{.Name}}</p></a>
+            </div>
+        {{end}}
+    </div>
+    <nav class="level" style="overflow: hidden;">
+        <div class="level-left">
+            <div class="sidebox-left level-item is-hidden-touch">
+                <p>"RSS Feeds for the 20th century"</p>
+            </div>
+        </div>
+        <div class="level-item has-text-centered">
+            <h1>{{.Title}}</h1>
+        </div>
+        <div class="level-right">
+            <div class="sidebox-right level-item is-hidden-touch">
+                <p>for your internet</p>
+            </div>
+        </div>
+    </nav>
+    <div class="bar level">
+        <div class="level-left">
+            <div class="level-item" style="width: 400px; justify-content: left">
+                <a href="https://yaas.cat">HTTPS://YAAS.CAT</a>
+            </div>
+        </div>
+        <div class="level-item has-text-centered">
+            <p>{{.Date}}</p>
+        </div>
+        <div class="level-left">
+            <div class="level-item" style="width: 400px; justify-content: right">
+                £0.50
+            </div>
+        </div>
+    </div>
+    <div class="columns is-gapless is-multiline" style="margin-left: inherit;margin-right: inherit">
+        {{range .Articles}}
+        <div class="column is-{{.Layout.Width}}">
+            {{if eq .Layout.Width 12}}
+                <div class="bar"> </div>
+            {{else}}
+            <div class="article" style="max-height:{{.Layout.Height}}px">
+                <a href="{{.Link}}">
+                <div class="overline"></div>
+                <div style="width: 100%; text-align: center; word-wrap: break-spaces">
+                    <p class="is-size-{{.Layout.TitleSize}} has-text-weight-bold">{{.Title}}</p>
+                </div>
+                <div class="underline"></div>
+                {{if eq .Layout.Width 6}}
+                    {{if .ImageURL}}
+                    <img src="/image?w=400&url={{.ImageURL}}" style="width:100%;height:auto;" loading="lazy"/>
+                    {{end}}
+                {{end}}
+                <p class="is-size-7 has-text-weight-bold">Words: {{.Author}} - {{.Source.Name}} - {{.TS}}</p>
+                </a>
+                <div class="columns is-gapless">
+                    <div class="column">
+                        <div class="subcol">
+                            {{.Content}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {{end}}
+        </div>
+        {{end}}
+    </div>
+    <div class="divider"></div>
+</div>
+</body>
+<script>
+</script>
+</html>

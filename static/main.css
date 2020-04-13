@@ -1,0 +1,136 @@
+body {
+    font-family: Georgia, serif;
+    color: black;
+}
+
+p {
+    font-size: 1rem;
+}
+
+a {
+    color: black;
+}
+
+@font-face {
+    font-family: "NewYorker";
+    src: url("/static/fonts/NewYorkerEngraved-zR1.woff");
+}
+
+@font-face {
+    font-family: "OldEnglish";
+    src: url("/static/fonts/OldEnglishFive-axyVg.woff");
+}
+
+h1 {
+    font-size: 4rem;
+    font-family: "OldEnglish", Georgia, serif;
+}
+
+h2 {
+    font-size: 3rem;
+    font-weight: 600;
+    word-wrap: break-spaces !important;
+}
+
+h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+h4 {
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+h5 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    margin-top: 1rem;
+}
+
+.bar {
+    border-top: 0.5px black;
+    border-bottom: 0.5px black;
+    padding: 0.1rem;
+    font-size: 1.2rem;
+    width: 100%;
+    border-style: solid;
+    border-right: none;
+    border-left: none;
+}
+
+.bar {
+    border-top: 0.5px black;
+    border-bottom: 0.5px black;
+    padding: 0.1rem;
+    font-size: 1.2rem;
+    width: 100%;
+    border-style: solid;
+    border-right: none;
+    border-left: none;
+    margin-bottom: 1rem;
+}
+
+.sidebox-left {
+    border: 0.5px solid black;
+    font-size: 1.2rem;
+    width: 180px;
+    margin-top: 1rem;
+    padding: 1rem;
+}
+
+.sidebox-right {
+    padding: 0.1rem;
+    font-size: 1.2rem;
+    width: 180px;
+    margin-top: 1rem;
+    font-family: Arial, sans-serif;
+    font-weight: 600;
+    align-items: flex-start;
+}
+
+.article {
+    margin-bottom: 1rem;
+    padding-top: 0;
+    border-bottom: none;
+    padding-right: 0.25rem;
+    padding-left: 0.25rem;
+    font-size: 0.7rem;
+    max-height: 1024px;
+    overflow-y: scroll;
+    border-right: 0.5px solid black;
+}
+
+.divider {
+    border-bottom: 1px solid black;
+    width: 100%;
+    height: 10px;
+    margin-top: 0.9rem;
+    margin-bottom: 1.5rem;
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+}
+
+.subcol {
+    padding-left: 0.1rem;
+    padding-right: 0.1rem;
+    column-count: auto;
+    column-width: 10rem;
+}
+
+.overline {
+    border-bottom: 0.5px solid black;
+    margin-left: 10%;
+    margin-right: 10%;
+    margin-top: 0.7rem;
+}
+
+.underline {
+    margin-bottom: 1rem;
+    border-bottom: 0.5px solid black;
+    margin-left: 30%;
+    margin-right: 30%;
+}

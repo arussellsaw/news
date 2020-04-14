@@ -121,6 +121,7 @@ h5 {
     column-count: auto;
     column-width: 10rem;
     hyphens: auto;
+    word-break: break-all;
 }
 
 .overline {

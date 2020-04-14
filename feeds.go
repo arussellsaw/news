@@ -12,11 +12,12 @@ import (
 )
 
 type Source struct {
-	Name       string
-	URL        string
-	FeedURL    string
-	Categories []string
-	ForceFetch bool
+	Name         string
+	URL          string
+	FeedURL      string
+	Categories   []string
+	ForceFetch   bool
+	DisableFetch bool
 }
 
 type Article struct {
@@ -44,7 +45,7 @@ var sources = []Source{
 		URL:        "https://theverge.com",
 		FeedURL:    "https://www.theverge.com/rss/index.xml",
 		Categories: []string{"tech", "games", "electronics"},
-		ForceFetch: true,
+		ForceFetch: false,
 	},
 	{
 		Name:       "Polygon",
@@ -71,10 +72,17 @@ var sources = []Source{
 		Categories: []string{"news", "opinion"},
 	},
 	{
-		Name:       "lobste.rs",
-		URL:        "https://lobste.rs",
-		FeedURL:    "https://lobste.rs/rss",
-		Categories: []string{"tech", "programming", "forums"},
+		Name:         "lobste.rs",
+		URL:          "https://lobste.rs",
+		FeedURL:      "https://lobste.rs/rss",
+		Categories:   []string{"tech", "programming", "forums"},
+		DisableFetch: true,
+	},
+	{
+		Name:       "Hackaday",
+		URL:        "https://hackaday.com",
+		FeedURL:    "https://hackaday.com/feed/",
+		Categories: []string{"tech", "programming"},
 	},
 }
 
@@ -111,7 +119,7 @@ func getArticles(c string) ([]Article, error) {
 						imageURL = item.Image.URL
 					}
 					var content string
-					if len(item.Content) < 100 || s.ForceFetch {
+					if (len(item.Content) < 100 || s.ForceFetch) && !s.DisableFetch {
 						text, image, ok, err := cache.Get(item.Link)
 						if err != nil {
 							return err
@@ -123,6 +131,7 @@ func getArticles(c string) ([]Article, error) {
 							g := goose.New()
 							article, err := g.ExtractFromURL(item.Link)
 							if err != nil {
+								cache.Set(item.Link, "error fetching content.", "")
 								log.Print(err)
 								return nil
 							}

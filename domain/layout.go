@@ -92,7 +92,13 @@ func LayoutArticles(aa []Article) []Article {
 	// first let's group articles by size
 	bySize := make([][]Article, 6)
 	for _, a := range aa {
-		s := len(a.Content)
+		s := 0
+		for _, c := range a.Content {
+			if c.Type != "text" {
+				continue
+			}
+			s += len(c.Value)
+		}
 		switch {
 		case s < 200:
 			bySize[0] = append(bySize[0], a)
@@ -191,27 +197,30 @@ func LayoutArticles(aa []Article) []Article {
 		}
 		// set the layout on the picked article
 		picked.Layout = l
-		content := []Element{}
-		chars := 0
-		for i, e := range picked.Content {
-			if e.Type != "text" {
+
+		/*
+			content := []Element{}
+			chars := 0
+			for i, e := range picked.Content {
+				if e.Type != "text" {
+					content = append(content, e)
+					continue
+				}
+				chars += len(e.Value)
+				if i > l.MaxElements {
+					e.Value = e.Value + "..."
+					content = append(content, e)
+					break
+				}
+				if chars > l.MaxChars {
+					e.Value = string(e.Value[:len(e.Value)-(chars-l.MaxChars)]) + "..."
+					content = append(content, e)
+					break
+				}
 				content = append(content, e)
-				continue
 			}
-			chars += len(e.Value)
-			if i > l.MaxElements {
-				e.Value = e.Value + "..."
-				content = append(content, e)
-				break
-			}
-			if chars > l.MaxChars {
-				e.Value = string(e.Value[:len(e.Value)-(chars-l.MaxChars)]) + "..."
-				content = append(content, e)
-				break
-			}
-			content = append(content, e)
-		}
-		picked.Content = content
+			picked.Content = content
+		*/
 		out = append(out, *picked)
 	}
 	return out

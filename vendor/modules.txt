@@ -1,7 +1,5 @@
 # github.com/PuerkitoBio/goquery v1.5.1
 github.com/PuerkitoBio/goquery
-# github.com/advancedlogic/GoOse v0.0.0-20191112112754-e742535969c1
-github.com/advancedlogic/GoOse
 # github.com/andybalholm/cascadia v1.1.0
 github.com/andybalholm/cascadia
 # github.com/araddon/dateparse v0.0.0-20180729174819-cfd92a431d0e
@@ -26,8 +24,12 @@ github.com/mmcdole/gofeed/internal/shared
 github.com/mmcdole/gofeed/rss
 # github.com/mmcdole/goxpp v0.0.0-20181012175147-0068e33feabf
 github.com/mmcdole/goxpp
+# github.com/monzo/slog v0.0.0-20191115111046-002e22b2c169
+github.com/monzo/slog
 # github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 github.com/nfnt/resize
+# github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
+github.com/nu7hatch/gouuid
 # github.com/olekukonko/tablewriter v0.0.0-20180506121414-d4647c9c7a84
 github.com/olekukonko/tablewriter
 # github.com/pkg/errors v0.8.1

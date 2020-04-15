@@ -14,12 +14,13 @@
 						<p class="is-size-2 has-text-weight-bold">{{.Title}}</p>
 					</div>
 					<div class="underline"></div>
-					<img style="width:100%; height:auto;" src="/image?w=1000&url={{.ImageURL}}"></img>
+					<img style="width:100%; height:auto;" src="/image?w=400&url={{.ImageURL}}"></img>
 					<p class="is-size-7 has-text-weight-bold">Words: {{.Author}} - {{.Source.Name}} - {{.TS}}</p>
 				</a>
 				<div style="font-size: 1.5rem;">
 					{{range .Content}}
 					<p>{{.Value}}</p>
+					<div style="height: 10px"></div>
 					{{end}}
 				</div>
 			</div>

@@ -52,11 +52,10 @@ var sources = []Source{
 		Categories: []string{"news", "opinion"},
 	},
 	{
-		Name:         "lobste.rs",
-		URL:          "https://lobste.rs",
-		FeedURL:      "https://lobste.rs/rss",
-		Categories:   []string{"tech", "programming", "forums"},
-		DisableFetch: true,
+		Name:       "lobste.rs",
+		URL:        "https://lobste.rs",
+		FeedURL:    "https://lobste.rs/rss",
+		Categories: []string{"tech", "programming", "forums"},
 	},
 	{
 		Name:       "Hackaday",

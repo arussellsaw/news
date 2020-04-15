@@ -2,14 +2,13 @@ package domain
 
 import (
 	"context"
-	"log"
+	"github.com/monzo/slog"
 	"sort"
 	"strings"
 	"sync"
 
 	"github.com/arussellsaw/news/pkg/goose"
 	"github.com/mmcdole/gofeed"
-	"golang.org/x/net/html"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -53,6 +52,10 @@ func GetArticles(ctx context.Context) ([]Article, error) {
 func doGetArticles(ctx context.Context) ([]Article, error) {
 	eg := errgroup.Group{}
 	articles := make(chan Article, 1024^2)
+	bucket := make(chan struct{}, 10)
+	for i := 0; i < 10; i++ {
+		bucket <- struct{}{}
+	}
 	for _, s := range sources {
 		s := s
 		eg.Go(func() error {
@@ -66,74 +69,38 @@ func doGetArticles(ctx context.Context) ([]Article, error) {
 			for _, item := range feed.Items {
 				item := item
 				s := s
+				<-bucket
 				g.Go(func() error {
+					defer func() { bucket <- struct{}{} }()
 					var imageURL string
 					if item.Image != nil {
 						imageURL = item.Image.URL
 					}
+					slogParams := map[string]string{
+						"url":       item.Link,
+						"image_url": imageURL,
+					}
 					var content string
-					if (len(item.Content) < 100 || s.ForceFetch) && !s.DisableFetch {
-						text, image, ok, err := cache.Get(item.Link)
-						if err != nil {
-							return err
-						}
-						if ok {
-							content = text
-							imageURL = image
-						} else {
-							g := goose.New()
-							article, err := g.ExtractFromURL(item.Link)
-							if err != nil {
-								cache.Set(item.Link, "error fetching content.", "")
-								log.Print(err)
-								return nil
-							}
-							content = article.CleanedText
-							imageURL = article.TopImage
-							err = cache.Set(item.Link, content, imageURL)
-							if err != nil {
-								return err
-							}
-						}
+					text, image, ok, err := cache.Get(item.Link)
+					if err != nil {
+						return err
+					}
+					if ok {
+						content = text
+						imageURL = image
 					} else {
-						doc, err := html.Parse(strings.NewReader(item.Content))
+						g := goose.New()
+						article, err := g.ExtractFromURL(item.Link)
+						if err != nil {
+							slog.Error(ctx, "Error fetching article: %s", err, slogParams)
+							return nil
+						}
+						content = article.CleanedText
+						imageURL = article.TopImage
+						err = cache.Set(item.Link, content, imageURL)
 						if err != nil {
 							return err
 						}
-
-						var f func(n *html.Node)
-						f = func(n *html.Node) {
-							switch n.Type {
-							case html.ElementNode:
-								if n.Data == "img" {
-									for _, a := range n.Attr {
-										if a.Key == "src" {
-											if imageURL == "" {
-												imageURL = a.Val
-											}
-										}
-									}
-								}
-							case html.TextNode:
-								if n.Parent.Data == "p" {
-									attrs := n.Parent.Attr
-									for _, a := range attrs {
-										if a.Key == "class" && matchClass(a.Val, []string{"twite", "top-stories"}) {
-											goto recurse
-										}
-									}
-									if item.Description == "" {
-										item.Description = n.Data
-									}
-									content += n.Data + " "
-								}
-							}
-						recurse:
-							for c := n.FirstChild; c != nil; c = c.NextSibling {
-								f(c)
-							}
-						}
-						f(doc)
 					}
 
 					var author string

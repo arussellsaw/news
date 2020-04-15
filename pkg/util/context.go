@@ -33,7 +33,7 @@ func WithTrace(ctx context.Context, r *http.Request) context.Context {
 func Trace(ctx context.Context) string {
 	v, ok := ctx.Value(traceKey("trace")).(string)
 	if !ok {
-		return "NOT_FOUND"
+		return ""
 	}
 	return v
 }

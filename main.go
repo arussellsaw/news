@@ -1,64 +1,45 @@
 package main
 
 import (
-	"html/template"
+	"context"
 	"log"
 	"net/http"
-	"sort"
-	"time"
+	"os"
+
+	"github.com/arussellsaw/news/domain"
+	"github.com/arussellsaw/news/handler"
+	"github.com/arussellsaw/news/pkg/util"
+	"github.com/monzo/slog"
 )
 
-var cache Cache = &memoryCache{m: make(map[string][2]string)}
-
 func main() {
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static/"))))
-	http.Handle("/favicon.ico", http.NotFoundHandler())
-	http.Handle("/image", http.HandlerFunc(handleDitherImage))
-	http.Handle("/", http.HandlerFunc(handleNews))
-	log.Fatal(http.ListenAndServe(":8080", nil))
-}
+	ctx := context.Background()
+	logger := &util.StackDriverLogger{}
+	slog.SetDefaultLogger(logger)
 
-func handleNews(w http.ResponseWriter, r *http.Request) {
-	t := template.New("index.html")
-	t, err := t.ParseFiles("tmpl/index.html")
-	if err != nil {
-		log.Fatal("parsing", err)
-	}
-
-	catMap := make(map[string]struct{})
-	for _, s := range sources {
-		for _, c := range s.Categories {
-			catMap[c] = struct{}{}
+	var (
+		err      error
+		articles []domain.Article
+	)
+	for {
+		articles, err = domain.GetArticles(ctx)
+		if err != nil {
+			slog.Error(ctx, "Error fetching articles: %s", err)
+			continue
 		}
+		break
 	}
-	cats := []string{}
-	for c := range catMap {
-		cats = append(cats, c)
+	if len(articles) == 0 {
+		log.Fatal(err)
 	}
-	sort.Strings(cats)
 
-	articles, err := getArticles(r.URL.Query().Get("cat"))
-	if err != nil {
-		log.Fatal("parsing", err)
+	var addr string
+	if os.Getenv("NEWS_ENV") == "debug" {
+		addr = ":8081"
+	} else {
+		addr = ":8080"
 	}
-	articles = LayoutArticles(articles)
-	h := Homepage{
-		Title:      "The Webpage",
-		Date:       time.Now().Format("Mon 02 Jan 2006"),
-		Sources:    sources,
-		Categories: cats,
-		Articles:   articles,
-	}
-	err = t.Execute(w, h)
-	if err != nil {
-		log.Fatal("executing", err)
-	}
-}
 
-type Homepage struct {
-	Title      string
-	Date       string
-	Categories []string
-	Sources    []Source
-	Articles   []Article
+	slog.Info(ctx, "ready, listening on addr: %s", addr)
+	slog.Error(ctx, "serving: %s", http.ListenAndServe(addr, handler.Init()))
 }

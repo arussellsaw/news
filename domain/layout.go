@@ -1,22 +1,31 @@
-package main
+package domain
 
 import "sort"
 
+type Homepage struct {
+	Title      string
+	Date       string
+	Categories []string
+	Sources    []Source
+	Articles   []Article
+}
+
 type Layout struct {
-	Size      int
-	Width     int
-	TitleSize int
-	Height    int
+	Size        int
+	Width       int
+	TitleSize   int
+	MaxChars    int
+	MaxElements int
 }
 
 var (
-	Layout1   = Layout{1, 2, 6, 220}
-	Layout2   = Layout{2, 2, 6, 300}
-	Layout3   = Layout{3, 2, 6, 800}
-	Layout4   = Layout{4, 4, 4, 800}
-	Layout5   = Layout{5, 4, 4, 800}
-	Layout6   = Layout{6, 6, 2, 800}
-	LayoutBar = Layout{0, 12, 0, 0}
+	Layout1   = Layout{1, 2, 6, 200, 32}
+	Layout2   = Layout{2, 2, 6, 500, 32}
+	Layout3   = Layout{3, 2, 6, 2250, 32}
+	Layout4   = Layout{4, 4, 4, 2800, 45}
+	Layout5   = Layout{5, 4, 4, 4000, 45}
+	Layout6   = Layout{6, 6, 2, 3300, 60}
+	LayoutBar = Layout{0, 12, 0, 0, 0}
 )
 
 var layoutSequence = []Layout{
@@ -182,6 +191,27 @@ func LayoutArticles(aa []Article) []Article {
 		}
 		// set the layout on the picked article
 		picked.Layout = l
+		content := []Element{}
+		chars := 0
+		for i, e := range picked.Content {
+			if e.Type != "text" {
+				content = append(content, e)
+				continue
+			}
+			chars += len(e.Value)
+			if i > l.MaxElements {
+				e.Value = e.Value + "..."
+				content = append(content, e)
+				break
+			}
+			if chars > l.MaxChars {
+				e.Value = string(e.Value[:len(e.Value)-(chars-l.MaxChars)]) + "..."
+				content = append(content, e)
+				break
+			}
+			content = append(content, e)
+		}
+		picked.Content = content
 		out = append(out, *picked)
 	}
 	return out

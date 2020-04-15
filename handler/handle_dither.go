@@ -1,39 +1,42 @@
-package main
+package handler
 
 import (
 	"bytes"
-	dither "github.com/esimov/dithergo"
-	"github.com/nfnt/resize"
 	"image"
 	_ "image/gif"
 	"image/jpeg"
 	_ "image/png"
-	"log"
 	"net/http"
 	"strconv"
+
+	dither "github.com/esimov/dithergo"
+	"github.com/monzo/slog"
+	"github.com/nfnt/resize"
 )
 
 func handleDitherImage(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	q := r.URL.Query()
 	url := q.Get("url")
 	res, err := http.Get(url)
 	if err != nil {
+		slog.Error(ctx, "Error getting image: %s", err)
 		http.Error(w, err.Error(), 500)
-		log.Println("getting", err, url)
 		return
 	}
 
 	width, err := strconv.ParseInt(q.Get("w"), 10, 64)
 	if err != nil {
+		slog.Error(ctx, "Error parsing width: %s", err)
 		http.Error(w, err.Error(), 500)
-		log.Println(err, url)
 		return
 	}
 
 	img, _, err := image.Decode(res.Body)
 	if err != nil {
+		slog.Error(ctx, "Error decoding image: %s", err)
 		http.Error(w, err.Error(), 500)
-		log.Println("decode: ", err, url)
 		return
 	}
 
@@ -53,12 +56,16 @@ func handleDitherImage(w http.ResponseWriter, r *http.Request) {
 
 	buffer := new(bytes.Buffer)
 	if err := jpeg.Encode(buffer, dithered, nil); err != nil {
-		log.Println("unable to encode image.", url)
+		slog.Error(ctx, "Error encoding image: %s", err)
+		http.Error(w, err.Error(), 500)
+		return
 	}
 
 	w.Header().Set("Content-Type", "image/jpeg")
 	w.Header().Set("Content-Length", strconv.Itoa(len(buffer.Bytes())))
 	if _, err := w.Write(buffer.Bytes()); err != nil {
-		log.Println("unable to write image.", url)
+		slog.Error(ctx, "Error writing image: %s", err)
+		http.Error(w, err.Error(), 500)
+		return
 	}
 }

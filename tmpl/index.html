@@ -49,7 +49,7 @@
             {{if eq .Layout.Width 12}}
                 <div class="bar"> </div>
             {{else}}
-            <div class="article" style="max-height:{{.Layout.Height}}px">
+            <div class="article">
                 <a href="{{.Link}}">
                 <div class="overline"></div>
                 <div style="width: 100%; text-align: center; word-wrap: break-spaces">
@@ -58,18 +58,23 @@
                 <div class="underline"></div>
                 {{if eq .Layout.Width 6}}
                     {{if .ImageURL}}
-                    <img src="/image?w=400&url={{.ImageURL}}" style="width:100%;height:auto;" loading="lazy"/>
+										<div style="
+											width:100%; 
+											background-size: cover; 
+											background-image: url('/image?w=1000&url={{.ImageURL}}');
+											width:100%;
+											height:400px;"/>
+										</div>
                     {{end}}
                 {{end}}
                 <p class="is-size-7 has-text-weight-bold">Words: {{.Author}} - {{.Source.Name}} - {{.TS}}</p>
                 </a>
-                <div class="columns is-gapless">
-                    <div class="column">
-                        <div class="subcol">
-                            {{.Content}}
-                        </div>
-                    </div>
-                </div>
+								<div class="subcol">
+									{{range .Content}}
+									<p style="font-size: 0.75rem">{{.Value}}</p>
+									{{end}}
+										<a href="/article?url={{.Link}}">(read more)</a>
+								</div>
             </div>
             {{end}}
         </div>

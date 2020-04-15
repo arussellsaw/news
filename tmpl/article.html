@@ -1,0 +1,31 @@
+<html lang="en">
+	<head>
+		<title>{{.Title}}</title>
+		<link rel="stylesheet" href="/static/bulma.min.css" type="text/css"/>
+		<link rel="stylesheet" href="/static/main.css" type="text/css"/>
+	</head>
+	<body>
+		<div class="container is-fluid">
+			<div class="bar"> </div>
+			<div class="article" style="border: none; width: 70%; margin-left: auto; margin-right: auto">
+				<a href="{{.Link}}">
+					<div class="overline"></div>
+					<div style="width: 100%; text-align: center; word-wrap: break-spaces">
+						<p class="is-size-2 has-text-weight-bold">{{.Title}}</p>
+					</div>
+					<div class="underline"></div>
+					<img style="width:100%; height:auto;" src="/image?w=1000&url={{.ImageURL}}"></img>
+					<p class="is-size-7 has-text-weight-bold">Words: {{.Author}} - {{.Source.Name}} - {{.TS}}</p>
+				</a>
+				<div style="font-size: 1.5rem;">
+					{{range .Content}}
+					<p>{{.Value}}</p>
+					{{end}}
+				</div>
+			</div>
+		</div>
+		</div>
+	</body>
+	<script>
+	</script>
+</html>

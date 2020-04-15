@@ -1,106 +1,59 @@
-package main
+package domain
 
 import (
+	"context"
+	"log"
+	"sort"
+	"strings"
+	"sync"
+
 	"github.com/arussellsaw/news/pkg/goose"
 	"github.com/mmcdole/gofeed"
 	"golang.org/x/net/html"
 	"golang.org/x/sync/errgroup"
-	"log"
-	"sort"
-	"strings"
-	"time"
 )
 
-type Source struct {
-	Name         string
-	URL          string
-	FeedURL      string
-	Categories   []string
-	ForceFetch   bool
-	DisableFetch bool
+var (
+	amu      sync.RWMutex
+	articles []Article
+	links    map[string]Article
+)
+
+func GetArticleForLink(link string) (Article, bool) {
+	amu.RLock()
+	defer amu.RLock()
+	a, ok := links[link]
+	return a, ok
 }
 
-type Article struct {
-	Title       string
-	Description string
-	Content     string
-	ImageURL    string
-	Link        string
-	Author      string
-	Source      Source
-	Timestamp   time.Time
-	TS          string
-	Layout      Layout
+func GetArticles(ctx context.Context) ([]Article, error) {
+	amu.RLock()
+	if len(articles) != 0 {
+		return articles, nil
+	}
+	amu.RUnlock()
+
+	amu.Lock()
+	defer amu.Unlock()
+	if len(articles) != 0 {
+		return articles, nil
+	}
+	aa, err := doGetArticles(ctx)
+	if err != nil {
+		return nil, nil
+	}
+	articles = aa
+	links = make(map[string]Article)
+	for _, article := range articles {
+		links[article.Link] = article
+	}
+	return articles, nil
 }
 
-var sources = []Source{
-	{
-		Name:       "Vox",
-		URL:        "https://vox.com",
-		FeedURL:    "https://www.vox.com/rss/index.xml",
-		Categories: []string{"news", "opinion"},
-	},
-	{
-		Name:       "The Verge",
-		URL:        "https://theverge.com",
-		FeedURL:    "https://www.theverge.com/rss/index.xml",
-		Categories: []string{"tech", "games", "electronics"},
-		ForceFetch: false,
-	},
-	{
-		Name:       "Polygon",
-		URL:        "https://polygon.com",
-		FeedURL:    "https://www.polygon.com/rss/index.xml",
-		Categories: []string{"tech", "games"},
-	},
-	{
-		Name:       "TechCrunch",
-		URL:        "https://techcrunch.com",
-		FeedURL:    "http://feeds.feedburner.com/TechCrunch/",
-		Categories: []string{"tech", "startups"},
-	},
-	{
-		Name:       "BBC News",
-		URL:        "https://bbc.co.uk/news",
-		FeedURL:    "http://feeds.bbci.co.uk/news/rss.xml",
-		Categories: []string{"news"},
-	},
-	{
-		Name:       "The Guardian",
-		URL:        "https://theguardian.co.uk",
-		FeedURL:    "https://www.theguardian.com/uk/rss",
-		Categories: []string{"news", "opinion"},
-	},
-	{
-		Name:         "lobste.rs",
-		URL:          "https://lobste.rs",
-		FeedURL:      "https://lobste.rs/rss",
-		Categories:   []string{"tech", "programming", "forums"},
-		DisableFetch: true,
-	},
-	{
-		Name:       "Hackaday",
-		URL:        "https://hackaday.com",
-		FeedURL:    "https://hackaday.com/feed/",
-		Categories: []string{"tech", "programming"},
-	},
-}
-
-func getArticles(c string) ([]Article, error) {
+func doGetArticles(ctx context.Context) ([]Article, error) {
 	eg := errgroup.Group{}
 	articles := make(chan Article, 1024^2)
 	for _, s := range sources {
-		if c != "" {
-			var ok bool
-			for _, cat := range s.Categories {
-				if cat == c {
-					ok = true
-				}
-			}
-			if !ok {
-				continue
-			}
-		}
 		s := s
 		eg.Go(func() error {
 			fp := gofeed.NewParser()
@@ -191,7 +144,7 @@ func getArticles(c string) ([]Article, error) {
 					articles <- Article{
 						Title:       item.Title,
 						Description: item.Description,
-						Content:     content,
+						Content:     toElements(content, "\n"),
 						ImageURL:    imageURL,
 						Link:        item.Link,
 						Author:      author,
@@ -227,4 +180,42 @@ func matchClass(class string, exclude []string) bool {
 		}
 	}
 	return false
+}
+
+func FilterArticles(aa []Article, cat string) []Article {
+	out := []Article{}
+L:
+	for _, a := range aa {
+		for _, c := range a.Source.Categories {
+			if c == cat || cat == "" {
+				out = append(out, a)
+				continue L
+			}
+		}
+	}
+	return out
+}
+
+func toElements(s, br string) []Element {
+	var (
+		lines = strings.Split(s, br)
+		out   []Element
+		row   string
+	)
+	for _, line := range lines {
+		if line == "p" {
+			continue
+		}
+		if line == "" {
+			out = append(out, Element{Type: "text", Value: row})
+			row = ""
+			continue
+		}
+		row += line
+
+	}
+	if row != "" {
+		out = append(out, Element{Type: "text", Value: row})
+	}
+	return out
 }

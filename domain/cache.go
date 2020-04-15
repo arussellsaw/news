@@ -1,6 +1,8 @@
-package main
+package domain
 
 import "sync"
+
+var cache Cache = &memoryCache{m: make(map[string][2]string)}
 
 type Cache interface {
 	Get(url string) (string, string, bool, error)

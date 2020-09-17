@@ -2,54 +2,21 @@ package domain
 
 import (
 	"context"
-	"github.com/monzo/slog"
+	"hash/fnv"
 	"sort"
 	"strings"
-	"sync"
+
+	"github.com/google/uuid"
+	"github.com/monzo/slog"
 
 	"github.com/arussellsaw/news/pkg/goose"
 	"github.com/mmcdole/gofeed"
 	"golang.org/x/sync/errgroup"
 )
 
-var (
-	amu      sync.RWMutex
-	articles []Article
-	links    map[string]Article
-)
+var space = uuid.MustParse("45e990eb-e8d4-4a13-8e74-e544bd11e45d")
 
-func GetArticleForLink(link string) (Article, bool) {
-	amu.RLock()
-	defer amu.RLock()
-	a, ok := links[link]
-	return a, ok
-}
-
-func GetArticles(ctx context.Context) ([]Article, error) {
-	amu.RLock()
-	if len(articles) != 0 {
-		return articles, nil
-	}
-	amu.RUnlock()
-
-	amu.Lock()
-	defer amu.Unlock()
-	if len(articles) != 0 {
-		return articles, nil
-	}
-	aa, err := doGetArticles(ctx)
-	if err != nil {
-		return nil, nil
-	}
-	articles = aa
-	links = make(map[string]Article)
-	for _, article := range articles {
-		links[article.Link] = article
-	}
-	return articles, nil
-}
-
-func doGetArticles(ctx context.Context) ([]Article, error) {
+func FetchArticles(ctx context.Context) ([]Article, error) {
 	eg := errgroup.Group{}
 	articles := make(chan Article, 1024^2)
 	bucket := make(chan struct{}, 10)
@@ -81,27 +48,14 @@ func doGetArticles(ctx context.Context) ([]Article, error) {
 						"image_url": imageURL,
 					}
 					var content string
-					text, image, ok, err := cache.Get(item.Link)
+					g := goose.New()
+					article, err := g.ExtractFromURL(item.Link)
 					if err != nil {
-						return err
+						slog.Error(ctx, "Error fetching article: %s", err, slogParams)
+						return nil
 					}
-					if ok {
-						content = text
-						imageURL = image
-					} else {
-						g := goose.New()
-						article, err := g.ExtractFromURL(item.Link)
-						if err != nil {
-							slog.Error(ctx, "Error fetching article: %s", err, slogParams)
-							return nil
-						}
-						content = article.CleanedText
-						imageURL = article.TopImage
-						err = cache.Set(item.Link, content, imageURL)
-						if err != nil {
-							return err
-						}
-					}
+					content = article.CleanedText
+					imageURL = article.TopImage
 
 					var author string
 					if item.Author != nil {
@@ -109,6 +63,7 @@ func doGetArticles(ctx context.Context) ([]Article, error) {
 					}
 
 					articles <- Article{
+						ID:          uuid.NewHash(fnv.New32(), space, []byte(item.Link), 4).String(),
 						Title:       item.Title,
 						Description: item.Description,
 						Content:     toElements(content, "\n"),

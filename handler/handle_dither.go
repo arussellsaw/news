@@ -1,10 +1,10 @@
 package handler
 
 import (
-	"bytes"
 	"image"
 	_ "image/gif"
 	"image/jpeg"
+	_ "image/jpeg"
 	_ "image/png"
 	"net/http"
 	"strconv"
@@ -12,6 +12,9 @@ import (
 	dither "github.com/esimov/dithergo"
 	"github.com/monzo/slog"
 	"github.com/nfnt/resize"
+
+	"github.com/arussellsaw/news/domain"
+	"github.com/arussellsaw/news/pkg/util"
 )
 
 func handleDitherImage(w http.ResponseWriter, r *http.Request) {
@@ -19,6 +22,14 @@ func handleDitherImage(w http.ResponseWriter, r *http.Request) {
 
 	q := r.URL.Query()
 	url := q.Get("url")
+	ctx = util.SetParam(ctx, "url", url)
+
+	cachedImage := domain.C.GetImage(url)
+	if cachedImage != nil {
+		jpeg.Encode(w, *cachedImage, nil)
+		return
+	}
+
 	res, err := http.Get(url)
 	if err != nil {
 		slog.Error(ctx, "Error getting image: %s", err)
@@ -52,20 +63,16 @@ func handleDitherImage(w http.ResponseWriter, r *http.Request) {
 			},
 		},
 	}
+
 	dithered := d.Monochrome(newImage, 1)
 
-	buffer := new(bytes.Buffer)
-	if err := jpeg.Encode(buffer, dithered, nil); err != nil {
+	w.Header().Set("Content-Type", "image/jpeg")
+
+	err = jpeg.Encode(w, dithered, nil)
+	if err != nil {
 		slog.Error(ctx, "Error encoding image: %s", err)
 		http.Error(w, err.Error(), 500)
 		return
 	}
 
-	w.Header().Set("Content-Type", "image/jpeg")
-	w.Header().Set("Content-Length", strconv.Itoa(len(buffer.Bytes())))
-	if _, err := w.Write(buffer.Bytes()); err != nil {
-		slog.Error(ctx, "Error writing image: %s", err)
-		http.Error(w, err.Error(), 500)
-		return
-	}
 }

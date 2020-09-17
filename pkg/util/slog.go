@@ -8,6 +8,25 @@ import (
 	"github.com/monzo/slog"
 )
 
+type ContextParamLogger struct {
+	slog.Logger
+}
+
+func (l ContextParamLogger) Log(evs ...slog.Event) {
+	for i, e := range evs {
+		params := Params(e.Context)
+		if params == nil {
+			continue
+		}
+
+		for k, v := range e.Metadata {
+			params[k] = v
+		}
+		evs[i].Metadata = params
+	}
+	l.Logger.Log(evs...)
+}
+
 // StackDriverLogger is an implementation of monzo/slog.Logger
 // that emits stackdriver compatible events
 type StackDriverLogger struct {

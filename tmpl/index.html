@@ -1,6 +1,6 @@
 <html lang="en">
 <head>
-    <title>{{.Title}}</title>
+    <title>The Webpage</title>
 
     <link rel="stylesheet" href="/static/bulma.min.css" type="text/css"/>
     <link rel="stylesheet" href="/static/main.css" type="text/css"/>
@@ -23,26 +23,26 @@
             </div>
         </div>
         <div class="level-item has-text-centered">
-            <h1>{{.Title}}</h1>
+					<a href="/"><h1>The Webpage</h1></a>
         </div>
         <div class="level-right">
             <div class="sidebox-right level-item is-hidden-touch">
-                <p>for your internet</p>
+							<img src="/barcode?id={{.ID}}" style="margin-top: 0;margin-bottom:0"></img>
             </div>
         </div>
     </nav>
     <div class="bar level">
         <div class="level-left">
-            <div class="level-item" style="width: 400px; justify-content: left">
-                <a href="https://yaas.cat">HTTPS://YAAS.CAT</a>
+            <div class="level-item">
+							{{.Name}}
             </div>
         </div>
         <div class="level-item has-text-centered">
             <p>{{.Date}}</p>
         </div>
         <div class="level-left">
-            <div class="level-item" style="width: 400px; justify-content: right">
-                £0.50
+            <div class="level-item">
+							{{.ID}}
             </div>
         </div>
     </div>
@@ -76,17 +76,38 @@
                         <p style="font-size: 0.75rem">{{.Value}}<br/></p>
                     {{end}}
                 </div>
-            <a href="/article?url={{.Link}}">(read more)</a>
+            <a href="/article?id={{.ID}}">(read more)</a>
             </div>
             {{end}}
         </div>
         {{end}}
     </div>
     <div class="divider"></div>
+		<div class="level" style="margin-left: 40%; margin-right:40%; margin-bottom: 100px">
+			<div class="level-item">
+				<a href="/?id={{.ID}}&p=1">1</a>
+			</div>
+			<div class="level-item">
+				<a href="/?id={{.ID}}&p=2">2</a>
+			</div>
+			<div class="level-item">
+				<a href="/?id={{.ID}}&p=3">3</a>
+			</div>
+			<div class="level-item">
+				<a href="/?id={{.ID}}&p=4">4</a>
+			</div>
+			<div class="level-item">
+				<a href="/?id={{.ID}}&p=5">5</a>
+			</div>
+		</div>
 </div>
 </body>
 <script>
     shave('.subcol-hasimage', 400);
     shave('.subcol', 850);
+		
+		var xhr = new XMLHttpRequest();
+		xhr.open("GET", "/generate-edition", true)
+		xhr.send(null)
 </script>
 </html>

@@ -3,6 +3,7 @@ package domain
 import "time"
 
 type Article struct {
+	ID          string
 	Title       string
 	Description string
 	Content     []Element

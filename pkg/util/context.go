@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 )
 
-func CloudContextMiddleware(h func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+func CloudContextMiddleware(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := WithTrace(r.Context(), r)
 		r = r.WithContext(ctx)
-		h(w, r)
-	}
+		h.ServeHTTP(w, r)
+	})
 }
 
 type traceKey string
@@ -36,4 +37,44 @@ func Trace(ctx context.Context) string {
 		return ""
 	}
 	return v
+}
+
+type paramKey string
+
+type paramContainer struct {
+	mu     sync.Mutex
+	params map[string]string
+}
+
+func WithParams(ctx context.Context, params map[string]string) context.Context {
+	return context.WithValue(ctx, paramKey("params"), paramContainer{params: params})
+}
+
+func SetParam(ctx context.Context, key, value string) context.Context {
+	v, ok := ctx.Value(paramKey("params")).(paramContainer)
+	if !ok {
+		return WithParams(ctx, map[string]string{key: value})
+	}
+
+	v.mu.Lock()
+	defer v.mu.Unlock()
+	v.params[key] = value
+
+	return ctx
+}
+
+func Params(ctx context.Context) map[string]string {
+	container, ok := ctx.Value(paramKey("params")).(paramContainer)
+	if !ok {
+		return nil
+	}
+
+	container.mu.Lock()
+	defer container.mu.Unlock()
+	params := make(map[string]string)
+	for k, v := range container.params {
+		params[k] = v
+	}
+
+	return params
 }

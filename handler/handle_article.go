@@ -4,9 +4,8 @@ import (
 	"html/template"
 	"net/http"
 
+	"github.com/arussellsaw/news/dao"
 	"github.com/monzo/slog"
-
-	"github.com/arussellsaw/news/domain"
 )
 
 func handleArticle(w http.ResponseWriter, r *http.Request) {
@@ -20,9 +19,10 @@ func handleArticle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	article, ok := domain.GetArticleForLink(r.URL.Query().Get("url"))
-	if !ok {
-		http.NotFoundHandler().ServeHTTP(w, r)
+	article, err := dao.GetArticle(ctx, r.URL.Query().Get("id"))
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
 	}
 
 	err = t.Execute(w, article)

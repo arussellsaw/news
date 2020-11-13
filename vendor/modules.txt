@@ -81,8 +81,20 @@ github.com/nu7hatch/gouuid
 github.com/olekukonko/tablewriter
 # github.com/pkg/errors v0.8.1
 github.com/pkg/errors
+# github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca
+github.com/saintfish/chardet
 # github.com/ssor/bom v0.0.0-20170718123548-6386211fdfcf
 github.com/ssor/bom
+# github.com/tdewolff/minify/v2 v2.3.8
+github.com/tdewolff/minify/v2
+github.com/tdewolff/minify/v2/html
+# github.com/tdewolff/parse/v2 v2.3.5
+github.com/tdewolff/parse/v2
+github.com/tdewolff/parse/v2/buffer
+github.com/tdewolff/parse/v2/html
+github.com/tdewolff/parse/v2/strconv
+# github.com/thatguystone/swan v0.0.0-20190904205542-d1079a5d0c05
+github.com/thatguystone/swan
 # go.opencensus.io v0.22.3
 go.opencensus.io
 go.opencensus.io/internal

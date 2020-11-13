@@ -3,18 +3,27 @@ package domain
 import (
 	"context"
 	"hash/fnv"
+	"io/ioutil"
+	"net/http"
+	"net/http/cookiejar"
 	"sort"
 	"strings"
 
 	"github.com/google/uuid"
 	"github.com/monzo/slog"
 
-	"github.com/arussellsaw/news/pkg/goose"
 	"github.com/mmcdole/gofeed"
+	"github.com/thatguystone/swan"
 	"golang.org/x/sync/errgroup"
 )
 
-var space = uuid.MustParse("45e990eb-e8d4-4a13-8e74-e544bd11e45d")
+var (
+	space  = uuid.MustParse("45e990eb-e8d4-4a13-8e74-e544bd11e45d")
+	jar, _ = cookiejar.New(&cookiejar.Options{})
+	c      = http.Client{
+		Jar: jar, //binks
+	}
+)
 
 func FetchArticles(ctx context.Context) ([]Article, error) {
 	eg := errgroup.Group{}
@@ -48,14 +57,30 @@ func FetchArticles(ctx context.Context) ([]Article, error) {
 						"image_url": imageURL,
 					}
 					var content string
-					g := goose.New()
-					article, err := g.ExtractFromURL(item.Link)
-					if err != nil {
-						slog.Error(ctx, "Error fetching article: %s", err, slogParams)
-						return nil
+					if !s.DisableFetch {
+						res, err := c.Get(item.Link)
+						if err != nil {
+							slog.Error(ctx, "Error fetching article: %s", err, slogParams)
+							return nil
+						}
+						buf, err := ioutil.ReadAll(res.Body)
+						if err != nil {
+							slog.Error(ctx, "Error reading article: %s", err, slogParams)
+							return nil
+						}
+						article, err := swan.FromHTML(item.Link, buf)
+						if err != nil {
+							slog.Error(ctx, "Error parsing article: %s", err, slogParams)
+							return nil
+						}
+						content = article.CleanedText
+						if article.Img != nil {
+							imageURL = article.Img.Src
+						}
+						if content == "" {
+							content = item.Content
+						}
 					}
-					content = article.CleanedText
-					imageURL = article.TopImage
 
 					var author string
 					if item.Author != nil {

@@ -1,9 +1,9 @@
 package handler
 
 import (
+	"github.com/arussellsaw/news/domain"
 	"net/http"
 
-	"github.com/arussellsaw/news/domain"
 	"github.com/arussellsaw/news/pkg/util"
 )
 

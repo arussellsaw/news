@@ -2,6 +2,7 @@ package dao
 
 import (
 	"context"
+	"github.com/pkg/errors"
 	"sync"
 	"time"
 
@@ -73,7 +74,7 @@ func SetEdition(ctx context.Context, e *domain.Edition) error {
 	for _, a := range e.Articles {
 		err := SetArticle(ctx, &a)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "storing article: "+a.ID)
 		}
 	}
 	stored := editionToStored(e)

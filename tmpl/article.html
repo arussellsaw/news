@@ -5,7 +5,7 @@
 		<link rel="stylesheet" href="/static/main.css" type="text/css"/>
 	</head>
 	<body>
-		<div class="container is-fluid">
+		<div class="container is-fluid"  style="max-width: 1200px;">
 			<div class="bar"> </div>
 			<div class="article" style="border: none; width: 70%; margin-left: auto; margin-right: auto">
 				<a href="{{.Link}}">
@@ -14,7 +14,7 @@
 						<p class="is-size-2 has-text-weight-bold">{{.Title}}</p>
 					</div>
 					<div class="underline"></div>
-					<img style="width:100%; height:auto;" src="/image?w=400&url={{.ImageURL}}"></img>
+					<img style="width:100%; height:auto;" src="{{.ImageURL}}"/>
 					<p class="is-size-7 has-text-weight-bold">Words: {{.Author}} - {{.Source.Name}} - {{.TS}}</p>
 				</a>
 				<div style="font-size: 1.5rem;">

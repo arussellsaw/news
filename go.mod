@@ -24,6 +24,7 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/simplereach/timeutils v1.2.0 // indirect
 	github.com/ssor/bom v0.0.0-20170718123548-6386211fdfcf // indirect
+	github.com/thatguystone/swan v0.0.0-20190904205542-d1079a5d0c05
 	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a
 	golang.org/x/text v0.3.2

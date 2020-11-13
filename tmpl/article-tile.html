@@ -1,0 +1,158 @@
+{{define "biggest-article"}}
+    {{if .ID}}
+        <div class="article biggest-article">
+            <a href="/article?id={{.ID}}">
+                {{if .ImageURL}}
+                    <img style="
+                    width:100%;
+                    background-size: cover;
+                    width:100%;
+                    height:auto;
+                    max-height: 700px;
+                    object-fit: cover;"
+                         src="{{.ImageURL}}"
+                    />
+                {{end}}
+                <div style="width: 100%; text-align: center; word-wrap: break-spaces">
+                    <p class="is-size-2 has-text-weight-bold">{{.Title}}</p>
+                </div>
+                <div class="underline"></div>
+            </a>
+            <a href="/?src={{.Source.Name}}"><p class="is-size-7 has-text-weight-bold">{{.Source.Name}} - {{.TS}}</p></a>
+            <div class="subcol">
+                {{range .Content}}
+                    <p style="font-size: 0.75rem">{{.Value}}<br/></p>
+                {{end}}
+            </div>
+            <a href="/article?id={{.ID}}">(read more)</a>
+        </div>
+    {{end}}
+{{end}}
+{{define "big-article"}}
+    {{if .ID}}
+        <div class="article big-article">
+            <a href="/article?id={{.ID}}">
+                <div class="overline"></div>
+                <div style="width: 100%; text-align: center; word-wrap: break-spaces">
+                    <p class="is-size-2 has-text-weight-bold">{{.Title}}</p>
+                </div>
+                <div class="underline"></div>
+                {{if .ImageURL}}
+                    <img style="
+                    width:100%;
+                    background-size: cover;
+                    width:100%;
+                    height:auto;
+                    max-height: 500px;
+                    object-fit: cover;"
+                         src="{{.ImageURL}}"
+                    />
+                {{end}}
+            </a>
+            <a href="/?src={{.Source.Name}}"><p class="is-size-7 has-text-weight-bold">{{.Source.Name}} - {{.TS}}</p></a>
+            <div class="subcol">
+                {{range .Content}}
+                    <p style="font-size: 0.75rem">{{.Value}}<br/></p>
+                {{end}}
+            </div>
+            <a href="/article?id={{.ID}}">(read more)</a>
+        </div>
+    {{end}}
+{{end}}
+
+{{define "article"}}
+{{if .ID}}
+<div class="article">
+    <a href="/article?id={{.ID}}">
+        <div class="overline"></div>
+        <div style="width: 100%; text-align: center; word-wrap: break-spaces">
+            <p class="is-size-4 has-text-weight-bold">{{.Title}}</p>
+        </div>
+        <div class="underline"></div>
+        {{if .ImageURL}}
+            <img style="
+                    width:100%;
+                    background-size: cover;
+                    width:100%;
+                    height:auto;
+                    max-height: 300px;
+                    object-fit: cover;"
+                 src="{{.ImageURL}}"
+            />
+        {{end}}
+    </a>
+        <a href="/?src={{.Source.Name}}"><p class="is-size-7 has-text-weight-bold">{{.Source.Name}} - {{.TS}}</p></a>
+    <div class="subcol">
+        {{range .Content}}
+            <p style="font-size: 0.75rem">{{.Value}}<br/></p>
+        {{end}}
+    </div>
+    <a href="/article?id={{.ID}}">(read more)</a>
+</div>
+{{end}}
+{{end}}
+
+
+{{define "medium-article"}}
+{{if .ID}}
+    <div class="article medium-article">
+        <a href="/article?id={{.ID}}">
+            <div class="overline"></div>
+            <div style="width: 100%; text-align: center; word-wrap: break-spaces">
+                <p class="is-size-3 has-text-weight-bold">{{.Title}}</p>
+            </div>
+            <div class="underline"></div>
+            {{if .ImageURL}}
+                <img style="
+                    width:100%;
+                    background-size: cover;
+                    width:100%;
+                    height:auto;
+                    max-height: 500px;
+                    object-fit: cover;"
+                     src="{{.ImageURL}}"
+                />
+            {{end}}
+        </a>
+            <a href="/?src={{.Source.Name}}"><p class="is-size-7 has-text-weight-bold">{{.Source.Name}} - {{.TS}}</p></a>
+        <div class="subcol">
+            {{range .Content}}
+                <p style="font-size: 0.75rem">{{.Value}}<br/></p>
+            {{end}}
+        </div>
+        <a href="/article?id={{.ID}}">(read more)</a>
+    </div>
+{{end}}
+{{end}}
+
+{{define "small-article"}}
+{{if .ID}}
+    <div class="article small-article">
+        <a href="/article?id={{.ID}}">
+            <div class="overline"></div>
+            <div style="width: 100%; text-align: center; word-wrap: break-spaces">
+                <p class="has-text-weight-bold">{{.Title}}</p>
+            </div>
+            <div class="underline"></div>
+            {{if .ImageURL}}
+                <img style="
+                    width:100%;
+                    background-size: cover;
+                    width:100%;
+                    height:auto;
+                    max-height: 500px;
+                    object-fit: cover;"
+                     src="{{.ImageURL}}"
+                />
+            {{end}}
+        </a>
+            <a href="/?src={{.Source.Name}}"><p class="is-size-7 has-text-weight-bold">{{.Source.Name}} - {{.TS}}</p></a>
+        <div class="subcol">
+            {{range .Content}}
+                <p style="font-size: 0.75rem">{{.Value}}<br/></p>
+            {{end}}
+        </div>
+        <a href="/article?id={{.ID}}">(read more)</a>
+    </div>
+{{end}}
+{{end}}

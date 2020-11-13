@@ -11,7 +11,6 @@ import (
 
 func handleGenerateEdition(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	slog.Info(ctx, "Checking for new edition")
 	e, err := dao.GetEditionForTime(ctx, time.Now(), false)
 	if err != nil {
 		slog.Error(ctx, "Error getting edition: %s", err)
@@ -32,7 +31,7 @@ func handleGenerateEdition(w http.ResponseWriter, r *http.Request) {
 	}
 	err = dao.SetEdition(ctx, e)
 	if err != nil {
-		slog.Error(ctx, "Error creating edition: %s", err)
+		slog.Error(ctx, "Error storing edition: %s", err)
 		http.Error(w, err.Error(), 500)
 		return
 	}

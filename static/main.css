@@ -1,6 +1,76 @@
-body {
+:root[color-mode="light"] {
+    --fg: #1f1f1f;
+    --bg: #ffffff;
+    --thin-line: 0.5px solid black;
+    --line: 1px solid black;
+}
+
+:root[color-mode="dark"] {
+    --fg: #ffffff;
+    --bg: #1f1f1f;
+    --thin-line: 0.5px solid white;
+    --line: 1px solid white;
+}
+
+:root[color-mode="dark"]  .dark-invert {
+    filter: invert(100%);
+}
+
+:root[color-mode="light"] .light--hidden {
+    display: none;
+}
+
+:root[color-mode="dark"]  .dark--hidden {
+    display: none;
+}
+
+.color-mode {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 4rem);
+    padding: 1rem 0.5rem;
+    margin: 0;
+}
+
+.color-mode__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1;
+    color: #111111;
+    color: var(--fg, #111111);
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+.color-mode__btn svg {
+    width: 20px;
+    height: 20px;
+    margin: 0.2rem;
+    fill: none;
+    stroke: #222222;
+    stroke: var(--fg, #222222);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.5px;
+}
+
+.color-mode__btn:hover svg,
+.color-mode__btn:focus svg, .color-mode__btn:focus {
+    outline: none;
+    fill: #fff7d6;
+    fill: var(--tertiary, #fff7d6);
+}
+
+body,html {
+    background-color: var(--bg);
+    color: var(--fg);
     font-family: Georgia, serif;
-    color: black;
 }
 
 p {
@@ -8,8 +78,9 @@ p {
 }
 
 a {
-    color: black;
+    color: var(--fg);
 }
+
 
 @font-face {
     font-family: "NewYorker";
@@ -52,8 +123,8 @@ h5 {
 }
 
 .bar {
-    border-top: 0.5px black;
-    border-bottom: 0.5px black;
+    border-top: var(--thin-line);
+    border-bottom: var(--thin-line);
     padding: 0.1rem;
     font-size: 1.2rem;
     width: 100%;
@@ -63,8 +134,8 @@ h5 {
 }
 
 .bar {
-    border-top: 0.5px black;
-    border-bottom: 0.5px black;
+    border-top: var(--thin-line);
+    border-bottom: var(--thin-line);
     padding: 0.1rem;
     font-size: 1.2rem;
     width: 100%;
@@ -75,7 +146,7 @@ h5 {
 }
 
 .sidebox-left {
-    border: 0.5px solid black;
+    border: var(--thin-line);
     font-size: 1.2rem;
     width: 180px;
     margin-top: 1rem;
@@ -100,11 +171,11 @@ h5 {
     padding-left: 0.25rem;
     font-size: 0.7rem;
     overflow-x: hidden;
-    border-right: 0.5px solid black;
+    border-right: var(--thin-line);
 }
 
 .divider {
-    border-bottom: 1px solid black;
+    border-bottom: var(--line);
     width: 100%;
     height: 10px;
     margin-top: 0.9rem;
@@ -130,7 +201,7 @@ h5 {
 }
 
 .overline {
-    border-bottom: 0.5px solid black;
+    border-bottom: var(--thin-line);
     margin-left: 10%;
     margin-right: 10%;
     margin-top: 0.7rem;
@@ -138,7 +209,7 @@ h5 {
 
 .underline {
     margin-bottom: 1rem;
-    border-bottom: 0.5px solid black;
+    border-bottom: var(--thin-line);
     margin-left: 30%;
     margin-right: 30%;
 }

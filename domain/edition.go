@@ -2,9 +2,11 @@ package domain
 
 import (
 	"context"
-	"github.com/pkg/errors"
+	"sort"
 	"time"
 	"unicode/utf8"
+
+	"github.com/pkg/errors"
 
 	"github.com/google/uuid"
 )
@@ -128,6 +130,11 @@ L:
 		bySource[a.Source.Name] = append(bySource[a.Source.Name], a)
 	}
 	newArticles = nil
+	for _, as := range bySource {
+		sort.Slice(as, func(i, j int) bool {
+			return as[i].Timestamp.After(as[j].Timestamp)
+		})
+	}
 top:
 	for s, as := range bySource {
 		newArticles = append(newArticles, as[0])

@@ -2,13 +2,8 @@ package domain
 
 import (
 	"context"
-	"sort"
+	"github.com/arussellsaw/news/idgen"
 	"time"
-	"unicode/utf8"
-
-	"github.com/pkg/errors"
-
-	"github.com/google/uuid"
 )
 
 var (
@@ -26,6 +21,7 @@ type Edition struct {
 
 	StartTime time.Time
 	EndTime   time.Time
+	Created   time.Time
 
 	Metadata map[string]string
 
@@ -56,7 +52,6 @@ top:
 				}
 				return ""
 			}()
-			a.Trim(size)
 			a.Layout = Layout{}
 			return a
 		}
@@ -87,9 +82,10 @@ func NewEdition(ctx context.Context, now time.Time) (*Edition, error) {
 	}
 
 	e := Edition{
-		ID:         uuid.New().String(),
+		ID:         idgen.New("edt"),
 		Sources:    sources,
 		Categories: cats,
+		Created:    time.Now(),
 	}
 
 	e.Date = time.Now().Format("Monday January 02 2006")
@@ -104,50 +100,6 @@ func NewEdition(ctx context.Context, now time.Time) (*Edition, error) {
 		e.EndTime = morning.Add(24 * time.Hour)
 		e.Name = "Evening Edition"
 	}
-
-	articles, err := FetchArticles(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "error fetching articles")
-	}
-
-	newArticles := []Article{}
-L:
-	for _, a := range articles {
-		if time.Since(a.Timestamp) > 100*time.Hour {
-			continue
-		}
-		for _, e := range a.Content {
-			if !utf8.Valid([]byte(e.Value)) {
-				continue L
-			}
-		}
-		newArticles = append(newArticles, a)
-	}
-	e.Articles = newArticles
-
-	bySource := make(map[string][]Article)
-	for _, a := range e.Articles {
-		bySource[a.Source.Name] = append(bySource[a.Source.Name], a)
-	}
-	newArticles = nil
-	for _, as := range bySource {
-		sort.Slice(as, func(i, j int) bool {
-			return as[i].Timestamp.After(as[j].Timestamp)
-		})
-	}
-top:
-	for s, as := range bySource {
-		newArticles = append(newArticles, as[0])
-		bySource[s] = as[1:]
-		if len(bySource[s]) == 0 {
-			delete(bySource, s)
-			goto top
-		}
-	}
-	if len(bySource) != 0 {
-		goto top
-	}
-	e.Articles = newArticles
 
 	return &e, nil
 }

@@ -1,3 +1,10 @@
+:root[color-mode="dark"] {
+    --fg: #ffffff;
+    --bg: #1f1f1f;
+    --thin-line: 0.5px solid white;
+    --line: 1px solid white;
+}
+
 :root[color-mode="light"] {
     --fg: #1f1f1f;
     --bg: #ffffff;
@@ -5,12 +12,6 @@
     --line: 1px solid black;
 }
 
-:root[color-mode="dark"] {
-    --fg: #ffffff;
-    --bg: #1f1f1f;
-    --thin-line: 0.5px solid white;
-    --line: 1px solid white;
-}
 
 :root[color-mode="dark"]  .dark-invert {
     filter: invert(100%);
@@ -64,7 +65,7 @@
 .color-mode__btn:focus svg, .color-mode__btn:focus {
     outline: none;
     fill: #fff7d6;
-    fill: var(--tertiary, #fff7d6);
+    fill: var(--fg, #fff7d6);
 }
 
 body,html {
@@ -81,6 +82,9 @@ a {
     color: var(--fg);
 }
 
+a:hover {
+    color: var(--fg);
+}
 
 @font-face {
     font-family: "NewYorker";
@@ -172,6 +176,7 @@ h5 {
     font-size: 0.7rem;
     overflow-x: hidden;
     border-right: var(--thin-line);
+    max-height: inherit;
 }
 
 .divider {
@@ -218,3 +223,31 @@ h5 {
 	font-size: 1.5rem;
 }
 
+.tile {
+    flex-basis: inherit !important;
+    flex-grow: initial !important;
+}
+
+.h100 {max-height: 100px !important;}
+.h150 {max-height: 150px !important;}
+.h200 {max-height: 200px !important;}
+.h250 {max-height: 250px !important;}
+.h300 {max-height: 300px !important;}
+.h350 {max-height: 350px !important;}
+.h400 {max-height: 400px !important;}
+.h450 {max-height: 450px !important;}
+.h500 {max-height: 500px !important;}
+.h550 {max-height: 550px !important;}
+.h600 {max-height: 600px !important;}
+.h650 {max-height: 650px !important;}
+.h700 {max-height: 700px !important;}
+.h750 {max-height: 750px !important;}
+.h800 {max-height: 800px !important;}
+.h850 {max-height: 850px !important;}
+.h900 {max-height: 900px !important;}
+.h950 {max-height: 950px !important;}
+.h1000 {max-height: 1000px !important;}
+.h1050 {max-height: 1050px !important;}
+.h1100 {max-height: 1100px !important;}
+.h1150 {max-height: 1150px !important;}
+.h1200 {max-height: 1200px !important;}

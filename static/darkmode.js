@@ -13,7 +13,7 @@ if (window.CSS && CSS.supports("color", "var(--fg)")) {
         document.documentElement.setAttribute("color-mode", "dark"); // Sets the user's preference in local storage
 
         localStorage.setItem("color-mode", "dark");
-    }; // Get the buttons in the DOM
+    };
 
     var toggleColorButtons = document.querySelectorAll(".color-mode__btn"); // Set up event listeners
 

@@ -13,8 +13,8 @@ import (
 
 func handleNews(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	t := template.New("index.html")
-	t, err := t.ParseFiles("tmpl/index.html", "tmpl/article-tile.html")
+	t := template.New("frame.html")
+	t, err := t.ParseFiles("tmpl/frame.html", "tmpl/frontpage-1.html", "tmpl/article-tile.html")
 	if err != nil {
 		slog.Error(ctx, "Error parsing template: %s", err)
 		http.Error(w, err.Error(), 500)
@@ -57,6 +57,10 @@ func handleNews(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		e.Articles = newArticles
+	}
+
+	for i := range e.Articles {
+		e.Articles[i].ID = "art_" + e.Articles[i].ID
 	}
 
 	err = t.Execute(w, &e)

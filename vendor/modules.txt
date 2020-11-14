@@ -2,6 +2,7 @@
 cloud.google.com/go
 cloud.google.com/go/civil
 cloud.google.com/go/compute/metadata
+cloud.google.com/go/iam
 cloud.google.com/go/internal
 cloud.google.com/go/internal/btree
 cloud.google.com/go/internal/fields
@@ -13,6 +14,10 @@ cloud.google.com/go/bigquery
 # cloud.google.com/go/firestore v1.2.0
 cloud.google.com/go/firestore
 cloud.google.com/go/firestore/apiv1
+# cloud.google.com/go/pubsub v1.3.1
+cloud.google.com/go/pubsub
+cloud.google.com/go/pubsub/apiv1
+cloud.google.com/go/pubsub/internal/distribution
 # github.com/BurntSushi/toml v0.3.1
 github.com/BurntSushi/toml
 # github.com/PuerkitoBio/goquery v1.5.1
@@ -25,8 +30,12 @@ github.com/araddon/dateparse
 github.com/boombuler/barcode
 github.com/boombuler/barcode/qr
 github.com/boombuler/barcode/utils
+# github.com/bwmarrin/snowflake v0.3.0
+github.com/bwmarrin/snowflake
 # github.com/esimov/dithergo v0.0.0-20190411040508-1672f44e9674
 github.com/esimov/dithergo
+# github.com/fatih/color v1.10.0
+github.com/fatih/color
 # github.com/fatih/set v0.2.1
 github.com/fatih/set
 # github.com/gigawattio/window v0.0.0-20180317192513-0f5467e35573
@@ -61,6 +70,10 @@ github.com/jaytaylor/html2text
 github.com/jstemmer/go-junit-report
 github.com/jstemmer/go-junit-report/formatter
 github.com/jstemmer/go-junit-report/parser
+# github.com/mattn/go-colorable v0.1.8
+github.com/mattn/go-colorable
+# github.com/mattn/go-isatty v0.0.12
+github.com/mattn/go-isatty
 # github.com/mattn/go-runewidth v0.0.3
 github.com/mattn/go-runewidth
 # github.com/mmcdole/gofeed v1.0.0-beta2
@@ -139,6 +152,7 @@ golang.org/x/oauth2/jws
 golang.org/x/oauth2/jwt
 # golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a
 golang.org/x/sync/errgroup
+golang.org/x/sync/semaphore
 # golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd
 golang.org/x/sys/unix
 # golang.org/x/text v0.3.2
@@ -195,6 +209,7 @@ google.golang.org/api/internal/third_party/uritemplates
 google.golang.org/api/iterator
 google.golang.org/api/option
 google.golang.org/api/option/internaloption
+google.golang.org/api/support/bundler
 google.golang.org/api/transport
 google.golang.org/api/transport/cert
 google.golang.org/api/transport/grpc
@@ -216,9 +231,13 @@ google.golang.org/appengine/urlfetch
 # google.golang.org/genproto v0.0.0-20200325114520-5b2d0af7952b
 google.golang.org/genproto/googleapis/api/annotations
 google.golang.org/genproto/googleapis/firestore/v1
+google.golang.org/genproto/googleapis/iam/v1
+google.golang.org/genproto/googleapis/pubsub/v1
 google.golang.org/genproto/googleapis/rpc/code
 google.golang.org/genproto/googleapis/rpc/status
+google.golang.org/genproto/googleapis/type/expr
 google.golang.org/genproto/googleapis/type/latlng
+google.golang.org/genproto/protobuf/field_mask
 # google.golang.org/grpc v1.28.0
 google.golang.org/grpc
 google.golang.org/grpc/attributes

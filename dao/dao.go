@@ -34,6 +34,7 @@ type storedEdition struct {
 	Date       string
 	StartTime  time.Time
 	EndTime    time.Time
+	Created    time.Time
 	Sources    []domain.Source
 	Articles   []string
 	Categories []string
@@ -42,6 +43,7 @@ type storedEdition struct {
 
 func GetEditionForTime(ctx context.Context, t time.Time, allowRecent bool) (*domain.Edition, error) {
 	iter := client.Collection("editions").Documents(ctx)
+	candidates := []*domain.Edition{}
 	var maxEdition storedEdition
 	for {
 		doc, err := iter.Next()
@@ -61,13 +63,28 @@ func GetEditionForTime(ctx context.Context, t time.Time, allowRecent bool) (*dom
 		}
 		if s.EndTime.After(t) {
 			e, err := editionFromStored(ctx, s)
-			return e, err
+			if err != nil {
+				return nil, err
+			}
+			candidates = append(candidates, e)
 		}
 	}
-	if maxEdition.ID != "" && allowRecent {
-		return editionFromStored(ctx, maxEdition)
+	if len(candidates) == 0 {
+		if maxEdition.ID != "" && allowRecent {
+			return editionFromStored(ctx, maxEdition)
+		}
 	}
-	return nil, nil
+
+	selected := &domain.Edition{}
+	for _, e := range candidates {
+		if e.Created.After(selected.Created) {
+			selected = e
+		}
+	}
+	if selected.ID == "" {
+		return nil, nil
+	}
+	return selected, nil
 }
 
 func SetEdition(ctx context.Context, e *domain.Edition) error {
@@ -90,6 +107,7 @@ func editionToStored(e *domain.Edition) storedEdition {
 		Sources:    e.Sources,
 		StartTime:  e.StartTime,
 		EndTime:    e.EndTime,
+		Created:    e.Created,
 		Categories: e.Categories,
 		Metadata:   e.Metadata,
 	}
@@ -110,6 +128,7 @@ func editionFromStored(ctx context.Context, s storedEdition) (*domain.Edition, e
 		Sources:    s.Sources,
 		StartTime:  s.StartTime,
 		EndTime:    s.EndTime,
+		Created:    s.Created,
 		Categories: s.Categories,
 		Metadata:   s.Metadata,
 	}
@@ -161,4 +180,43 @@ func GetArticle(ctx context.Context, id string) (*domain.Article, error) {
 	articleCache[a.ID] = a
 	mu.Unlock()
 	return &a, err
+}
+
+func GetArticleByURL(ctx context.Context, url string) (*domain.Article, error) {
+	iter := client.Collection("articles").Where("Link", "==", url).Documents(ctx)
+	docs, err := iter.GetAll()
+	if err != nil {
+		return nil, err
+	}
+	if len(docs) == 0 {
+		return nil, nil
+	}
+	a := domain.Article{}
+	err = docs[0].DataTo(&a)
+	mu.Lock()
+	articleCache[a.ID] = a
+	mu.Unlock()
+	return &a, err
+}
+
+func GetArticlesByTime(ctx context.Context, start, end time.Time) ([]domain.Article, error) {
+	iter := client.Collection("articles").
+		Where("Timestamp", ">", start).
+		Where("Timestamp", "<", end).
+		Documents(ctx)
+	docs, err := iter.GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	out := []domain.Article{}
+	for _, doc := range docs {
+		a := domain.Article{}
+		err = doc.DataTo(&a)
+		mu.Lock()
+		articleCache[a.ID] = a
+		mu.Unlock()
+		out = append(out, a)
+	}
+	return out, nil
 }

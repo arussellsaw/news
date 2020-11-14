@@ -1,5 +1,10 @@
 package domain
 
+import (
+	"net/http"
+	"net/http/cookiejar"
+)
+
 type Source struct {
 	Name         string
 	URL          string
@@ -8,6 +13,13 @@ type Source struct {
 	ForceFetch   bool
 	DisableFetch bool
 }
+
+var (
+	jar, _ = cookiejar.New(&cookiejar.Options{})
+	c      = http.Client{
+		Jar: jar, //binks
+	}
+)
 
 func GetSources() []Source {
 	return sources
@@ -37,7 +49,7 @@ var sources = []Source{
 		Name:       "Polygon",
 		URL:        "https://polygon.com",
 		FeedURL:    "https://www.polygon.com/rss/index.xml",
-		Categories: []string{"tech", "games"},
+		Categories: []string{"games"},
 	},
 	{
 		Name:       "The Guardian",
@@ -75,5 +87,23 @@ var sources = []Source{
 		FeedURL:      "https://www.huffpost.com/section/front-page/feed",
 		Categories:   []string{"opinion", "news"},
 		DisableFetch: true,
+	},
+	{
+		Name:       "Eurogamer",
+		URL:        "https://eurogamer.net",
+		FeedURL:    "https://www.eurogamer.net/?format=rss",
+		Categories: []string{"games"},
+	},
+	{
+		Name:       "Bon Appetit",
+		URL:        "https://bonappetit.com",
+		FeedURL:    "https://www.bonappetit.com/feed/rss",
+		Categories: []string{"food"},
+	},
+	{
+		Name:       "Food52",
+		URL:        "https://food52.com",
+		FeedURL:    "https://food52.com/blog.rss",
+		Categories: []string{"food"},
 	},
 }

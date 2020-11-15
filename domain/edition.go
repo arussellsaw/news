@@ -3,6 +3,7 @@ package domain
 import (
 	"context"
 	"github.com/arussellsaw/news/idgen"
+	"sort"
 	"time"
 )
 
@@ -34,10 +35,8 @@ func (e *Edition) GetArticle(size int, image bool) Article {
 		e.claimed = make(map[string]bool)
 	}
 top:
+	candidates := []Article{}
 	for _, a := range e.Articles {
-		if a.ID == "bar" {
-			continue
-		}
 		if a.Size() >= size {
 			if a.ImageURL == "" && image {
 				continue
@@ -45,25 +44,29 @@ top:
 			if e.claimed[a.ID] {
 				continue
 			}
-			e.claimed[a.ID] = true
-			a.ImageURL = func() string {
-				if image {
-					return a.ImageURL
-				}
-				return ""
-			}()
 			a.Layout = Layout{}
-			return a
+			candidates = append(candidates, a)
 		}
 	}
-	if size >= 0 {
+	if len(candidates) == 0 && size > 0 {
 		size -= 100
 		goto top
+	} else if len(candidates) == 0 {
+		return Article{}
 	}
-	return Article{
-		Title:  "Not Found",
-		Author: "404",
-	}
+	sort.Slice(candidates, func(i, j int) bool {
+		return candidates[i].Timestamp.Before(candidates[i].Timestamp)
+	})
+	a := candidates[0]
+	a.ImageURL = func() string {
+		if image {
+			return a.ImageURL
+		}
+		return ""
+	}()
+
+	e.claimed[a.ID] = true
+	return a
 }
 
 func NewEdition(ctx context.Context, now time.Time) (*Edition, error) {

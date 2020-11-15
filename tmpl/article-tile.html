@@ -4,11 +4,11 @@
             <div id="{{.ID}}-link">
             <a href="/article?id={{.ID}}">
                 {{if .ImageURL}}
-                    <img style="
+                    <img class="lazy" style="
                     width:100%;
                     height: 450px;
                     object-fit: cover;"
-                         src="{{.ImageURL}}"
+                         data-src="{{.ImageURL}}"
                     />
                 {{end}}
                 <div style="width: 100%; text-align: center; word-wrap: break-spaces">
@@ -41,13 +41,13 @@
                 </div>
                 <div class="underline"></div>
                 {{if .ImageURL}}
-                    <img style="
+                    <img class="lazy" style="
                     width:100%;
                     background-size: cover;
                     width:100%;
                     height: 400px;
                     object-fit: cover;"
-                         src="{{.ImageURL}}"
+                         data-src="{{.ImageURL}}"
                     />
                 {{end}}
             </a>
@@ -77,13 +77,13 @@
         </div>
         <div class="underline"></div>
         {{if .ImageURL}}
-            <img style="
+            <img class="lazy" style="
                     width:100%;
                     background-size: cover;
                     width:100%;
                     height: 200px;
                     object-fit: cover;"
-                 src="{{.ImageURL}}"
+                 data-src="{{.ImageURL}}"
             />
         {{end}}
     </a>
@@ -114,13 +114,13 @@
             </div>
             <div class="underline"></div>
             {{if .ImageURL}}
-                <img style="
+                <img class="lazy" style="
                     width:100%;
                     background-size: cover;
                     width:100%;
                     height:400px;
                     object-fit: cover;"
-                     src="{{.ImageURL}}"
+                     data-src="{{.ImageURL}}"
                 />
             {{end}}
         </a>
@@ -148,14 +148,14 @@
                 <p class="has-text-weight-bold">{{.Title}}</p>
             </div>
             {{if .ImageURL}}
-                <img style="
+                <img class="lazy" style="
                     width:100%;
                     background-size: cover;
                     width:100%;
                     height:auto;
                     max-height: 500px;
                     object-fit: cover;"
-                     src="{{.ImageURL}}"
+                     data-src="{{.ImageURL}}"
                 />
             {{end}}
         </a>

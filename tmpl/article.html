@@ -1,18 +1,18 @@
 {{ define "content" }}
-	<div class="article" style="border: none; width: 70%; margin-left: auto; margin-right: auto">
+	<div class="article" style="border: none; width: 65%; margin-left: auto; margin-right: auto">
 		<a href="{{.Link}}">
 			<div class="overline"></div>
 			<div style="width: 100%; text-align: center; word-wrap: break-spaces">
 				<p class="is-size-2 has-text-weight-bold">{{.Title}}</p>
 			</div>
 			<div class="underline"></div>
-			<img style="width:100%; height:auto;" src="{{.ImageURL}}"/>
-			<p class="is-size-7 has-text-weight-bold">Words: {{.Author}} - {{.Source.Name}} - {{.TS}}</p>
+			<img style="width:100%; height:auto; margin-bottom: 2rem;" src="{{.ImageURL}}"/>
+			<p class="is-size-5 has-text-weight-bold">{{.Source.Name}} - {{.TS}}</p>
 		</a>
-		<div style="font-size: 1.5rem;">
+		<div style="margin-top: 2rem;">
 			{{range .Content}}
-				<p>{{.Value}}</p>
-				<div style="height: 10px"></div>
+				<p style="font-size: 1.3rem;">{{.Value}}</p>
+				<div style="height: 20px"></div>
 			{{end}}
 		</div>
 	</div>

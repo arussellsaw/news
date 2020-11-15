@@ -30,6 +30,7 @@ func Init(ctx context.Context) http.Handler {
 	m.Handle("/generate-edition", http.HandlerFunc(handleGenerateEdition))
 	m.Handle("/events/source", http.HandlerFunc(handlePubsubSource))
 	m.Handle("/events/article", http.HandlerFunc(handlePubsubArticle))
+	m.Handle("/article/debug", http.HandlerFunc(handleDebugArticle))
 	m.Handle("/poll", http.HandlerFunc(handlePoll))
 	m.Handle("/", http.HandlerFunc(handleNews))
 

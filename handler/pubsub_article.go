@@ -76,7 +76,7 @@ func handlePubsubArticle(w http.ResponseWriter, r *http.Request) {
 	a := domain.Article{
 		ID:          idgen.New("art"),
 		Title:       e.Article.Title,
-		Description: e.Article.Description,
+		Description: article.Meta.Description,
 		Content:     toElements(content, "\n"),
 		ImageURL: func() string {
 			if article.Img != nil {

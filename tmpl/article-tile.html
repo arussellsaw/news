@@ -4,11 +4,11 @@
             <div id="{{.ID}}-link">
             <a href="/article?id={{.ID}}">
                 {{if .ImageURL}}
-                    <img class="lazy" style="
+                    <img style="
                     width:100%;
                     height: 450px;
                     object-fit: cover;"
-                         data-src="{{.ImageURL}}"
+                         src="{{.ImageURL}}"
                     />
                 {{end}}
                 <div style="width: 100%; text-align: center; word-wrap: break-spaces">

@@ -4,7 +4,6 @@ import (
 	"github.com/arussellsaw/news/domain"
 	"html/template"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/arussellsaw/news/dao"
@@ -27,7 +26,7 @@ func handleArticle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	article, err := dao.GetArticle(ctx, strings.TrimPrefix(r.URL.Query().Get("id"), "art_"))
+	article, err := dao.GetArticle(ctx, r.URL.Query().Get("id"))
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return

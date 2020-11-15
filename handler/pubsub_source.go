@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/mmcdole/gofeed"
 	"github.com/monzo/slog"
@@ -42,7 +43,7 @@ func handlePubsubSource(w http.ResponseWriter, r *http.Request) {
 	for _, item := range feed.Items {
 		err := p.Publish(ctx, "articles", ArticleEvent{
 			Article: domain.Article{
-				Title:       item.Title,
+				Title:       strings.TrimSpace(item.Title),
 				Description: item.Description,
 				ImageURL: func() string {
 					if item.Image != nil {

@@ -4,6 +4,9 @@ import (
 	"github.com/arussellsaw/news/dao"
 	"html/template"
 	"net/http"
+	"regexp"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/monzo/slog"
@@ -14,7 +17,7 @@ import (
 func handleNews(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	t := template.New("frame.html")
-	t, err := t.ParseFiles("tmpl/frame.html", "tmpl/frontpage-1.html", "tmpl/article-tile.html")
+	t, err := t.ParseFiles("tmpl/frame.html", "tmpl/frontpage-1.html", "tmpl/section.html", "tmpl/article-tile.html")
 	if err != nil {
 		slog.Error(ctx, "Error parsing template: %s", err)
 		http.Error(w, err.Error(), 500)
@@ -60,7 +63,7 @@ func handleNews(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for i := range e.Articles {
-		e.Articles[i].ID = "art_" + e.Articles[i].ID
+		e.Articles[i].Description = removeHTMLTag(e.Articles[i].Description)
 	}
 
 	err = t.Execute(w, &e)
@@ -69,4 +72,21 @@ func handleNews(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
+}
+
+func removeHTMLTag(in string) string {
+	// regex to match html tag
+	const pattern = `(<\/?[a-zA-A]+?[^>]*\/?>)*`
+	r := regexp.MustCompile(pattern)
+	groups := r.FindAllString(in, -1)
+	// should replace long string first
+	sort.Slice(groups, func(i, j int) bool {
+		return len(groups[i]) > len(groups[j])
+	})
+	for _, group := range groups {
+		if strings.TrimSpace(group) != "" {
+			in = strings.ReplaceAll(in, group, "")
+		}
+	}
+	return in
 }

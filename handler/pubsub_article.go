@@ -94,7 +94,7 @@ func handlePubsubArticle(w http.ResponseWriter, r *http.Request) {
 		slog.Error(ctx, "Error storing article: %s", err, slogParams)
 		return
 	}
-	slog.Debug(ctx, "Stored new article: %s - %s", a.ID, a.Title)
+	slog.Info(ctx, "Stored new article: %s - %s", a.ID, a.Title)
 }
 
 func httpError(ctx context.Context, w http.ResponseWriter, msg string, err error) {

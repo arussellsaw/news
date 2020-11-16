@@ -42,7 +42,9 @@ type storedEdition struct {
 }
 
 func GetEditionForTime(ctx context.Context, t time.Time, allowRecent bool) (*domain.Edition, error) {
-	iter := client.Collection("editions").Documents(ctx)
+	iter := client.Collection("editions").
+		Where("EndTime", ">", t).
+		Documents(ctx)
 	candidates := []*domain.Edition{}
 	var maxEdition storedEdition
 	for {

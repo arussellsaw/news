@@ -180,6 +180,7 @@ h5 {
     padding-left: 0.25rem;
     font-size: 0.8rem;
     overflow-x: hidden;
+    overflow-y: hidden !important;
     border-right: var(--thin-line);
     max-height: inherit;
 }

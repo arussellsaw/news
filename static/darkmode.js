@@ -15,6 +15,13 @@ if (window.CSS && CSS.supports("color", "var(--fg)")) {
         localStorage.setItem("color-mode", "dark");
     };
 
+    var microfiche = function() {
+        document.documentElement.setAttribute("color-mode", "microfiche"); // Sets the user's preference in local storage
+
+        localStorage.setItem("color-mode", "microfiche");
+        return;
+    }
+
     var toggleColorButtons = document.querySelectorAll(".color-mode__btn"); // Set up event listeners
 
     toggleColorButtons.forEach(function(btn) {

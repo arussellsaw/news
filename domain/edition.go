@@ -4,13 +4,37 @@ import (
 	"context"
 	"github.com/arussellsaw/news/idgen"
 	"sort"
+	"sync"
 	"time"
 )
 
 var (
 	morningEdition time.Duration = 6 * time.Hour
 	eveningEdition time.Duration = 17 * time.Hour
+
+	lc = layoutCache{}
 )
+
+type layoutCache struct {
+	mu    sync.RWMutex
+	cache map[int]Article
+}
+
+func (c *layoutCache) Get(i int) (Article, bool) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	a, ok := c.cache[i]
+	return a, ok
+}
+
+func (c *layoutCache) Set(i int, a Article) {
+	c.mu.Lock()
+	if c.cache == nil {
+		c.cache = make(map[int]Article)
+	}
+	c.cache[i] = a
+	c.mu.Unlock()
+}
 
 type Edition struct {
 	ID         string
@@ -26,13 +50,18 @@ type Edition struct {
 
 	Metadata map[string]string
 
-	Article Article
-	claimed map[string]bool
+	Article    Article
+	claimed    map[string]bool
+	cacheIndex int
 }
 
 func (e *Edition) GetArticle(size int, image bool) Article {
 	if e.claimed == nil {
 		e.claimed = make(map[string]bool)
+	}
+	if a, ok := lc.Get(e.cacheIndex); ok {
+		e.cacheIndex++
+		return a
 	}
 top:
 	candidates := []Article{}
@@ -66,6 +95,8 @@ top:
 	}()
 
 	e.claimed[a.ID] = true
+	lc.Set(e.cacheIndex, a)
+	e.cacheIndex++
 	return a
 }
 

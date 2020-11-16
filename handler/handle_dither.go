@@ -64,7 +64,7 @@ func handleDitherImage(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	dithered := d.Monochrome(newImage, 1)
+	dithered := d.Color(newImage, 1)
 
 	w.Header().Set("Content-Type", "image/jpeg")
 

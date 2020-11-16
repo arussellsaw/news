@@ -1,3 +1,26 @@
+{{ define "section-top"}}
+    <div class="tile is-gapless">
+        <div class="tile is-child is-8 h1200">
+            {{template "top-article" .GetArticle 3000 true }}
+        </div>
+        <div class="tile is-4 is-vertical">
+            <div class="tile">
+                <div class="tile is-child is-6 h300">
+                    {{template "small-article" .GetArticle 400 false }}
+                </div>
+                <div class="tile is-child is-6 h300">
+                    {{template "small-article" .GetArticle 400 false }}
+                </div>
+            </div>
+            <div class="tile">
+                <div class="tile is-child is-12" style="max-height: 900px">
+                    {{template "medium-article" .GetArticle 3000 false }}
+                </div>
+            </div>
+        </div>
+    </div>
+{{end}}
+
 {{ define "section-1"}}
     <div class="tile is-gapless">
         <div class="tile is-child is-8 h1200">

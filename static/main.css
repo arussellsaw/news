@@ -1,8 +1,16 @@
 :root[color-mode="dark"] {
     --fg: #ffffff;
     --bg: #1f1f1f;
-    --thin-line: 0.5px solid white;
-    --line: 1px solid white;
+    --thin-line: 0.5px solid #ffffff;
+    --line: 1px solid #ffffff;
+}
+
+:root[color-mode="microfiche"] {
+    --fg: #d1e389;
+    --bg: #162047;
+    #--bg: #1f1f1f;
+    --thin-line: 0.5px solid #d1e389;
+    --line: 1px solid #d1e389;
 }
 
 :root[color-mode="light"] {
@@ -42,7 +50,6 @@
     font-size: 1rem;
     font-weight: 600;
     line-height: 1;
-    color: #111111;
     color: var(--fg, #111111);
     cursor: pointer;
     background: none;
@@ -54,7 +61,6 @@
     height: 20px;
     margin: 0.2rem;
     fill: none;
-    stroke: #222222;
     stroke: var(--fg, #222222);
     stroke-linecap: round;
     stroke-linejoin: round;
@@ -64,7 +70,6 @@
 .color-mode__btn:hover svg,
 .color-mode__btn:focus svg, .color-mode__btn:focus {
     outline: none;
-    fill: #fff7d6;
     fill: var(--fg, #fff7d6);
 }
 
@@ -173,7 +178,7 @@ h5 {
     border-bottom: none;
     padding-right: 0.25rem;
     padding-left: 0.25rem;
-    font-size: 0.7rem;
+    font-size: 0.8rem;
     overflow-x: hidden;
     border-right: var(--thin-line);
     max-height: inherit;
@@ -251,3 +256,4 @@ h5 {
 .h1100 {max-height: 1100px !important;}
 .h1150 {max-height: 1150px !important;}
 .h1200 {max-height: 1200px !important;}
+

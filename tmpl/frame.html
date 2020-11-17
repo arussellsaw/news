@@ -113,30 +113,25 @@
         })
     </script>
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            var articles = document.querySelectorAll(".article");
-            var articleObserver = new IntersectionObserver(function(entries, observer) {
-                entries.forEach(function(entry) {
-                    var el = entry.target
-                    var id = el.id
-                    var style = getComputedStyle(el)
-                    if (style.maxHeight === "none") {
-                        return
-                    }
-                    var height = style.maxHeight.slice(0, -2)
-                    var link = document.getElementById(id+"-link")
-                    var linkStyle = getComputedStyle(link)
-                    height = height - (Number(link.offsetHeight) + Number(linkStyle.marginTop.slice(0, -2)) + Number(linkStyle.marginBottom.slice(0,-2)))
-                    height = height - Number(style.marginTop.slice(0,-2))
-                    height = height - Number(style.marginBottom.slice(0,-2))
-                    height -= 20
-                    shave("#"+id+"-text", height)
-                })
-            })
-            articles.forEach(function(article) {
-                articleObserver.observe(article);
-            });
-        })
+        var trimArticle = function(id) {
+            var el = document.getElementById(id)
+            if (el == null) {
+                return
+            }
+            var id = el.id
+            var style = getComputedStyle(el)
+            if (style.maxHeight === "none") {
+                return
+            }
+            var height = style.maxHeight.slice(0, -2)
+            var link = document.getElementById(id+"-link")
+            var linkStyle = getComputedStyle(link)
+            height = height - (Number(link.offsetHeight) + Number(linkStyle.marginTop.slice(0, -2)) + Number(linkStyle.marginBottom.slice(0,-2)))
+            height = height - Number(style.marginTop.slice(0,-2))
+            height = height - Number(style.marginBottom.slice(0,-2))
+            height -= 20
+            shave("#"+id+"-text", height)
+        }
     </script>
 </head>
 <body>
@@ -204,7 +199,7 @@
             </div>
         </div>
         <div class="level-left">
-            <div class="level-item">
+            <div class="level-item" onClick="dracula()">
                 {{.Date}}
             </div>
         </div>
@@ -234,6 +229,13 @@
             document.documentElement.setAttribute("color-mode", "microfiche"); // Sets the user's preference in local storage
 
             localStorage.setItem("color-mode", "microfiche");
+            return;
+        }
+
+        var dracula = function() {
+            document.documentElement.setAttribute("color-mode", "dracula"); // Sets the user's preference in local storage
+
+            localStorage.setItem("color-mode", "dracula");
             return;
         }
 

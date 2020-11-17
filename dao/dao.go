@@ -3,6 +3,7 @@ package dao
 import (
 	"context"
 	"github.com/pkg/errors"
+	"golang.org/x/sync/errgroup"
 	"sync"
 	"time"
 
@@ -134,14 +135,20 @@ func editionFromStored(ctx context.Context, s storedEdition) (*domain.Edition, e
 		Categories: s.Categories,
 		Metadata:   s.Metadata,
 	}
-	for _, id := range s.Articles {
-		a, err := GetArticle(ctx, id)
-		if err != nil {
-			return nil, err
-		}
-		e.Articles = append(e.Articles, *a)
+	e.Articles = make([]domain.Article, len(s.Articles))
+	g := errgroup.Group{}
+	for i, id := range s.Articles {
+		i, id := i, id
+		g.Go(func() error {
+			a, err := GetArticle(ctx, id)
+			if err != nil {
+				return err
+			}
+			e.Articles[i] = *a
+			return nil
+		})
 	}
-	return &e, nil
+	return &e, g.Wait()
 }
 
 func GetEdition(ctx context.Context, id string) (*domain.Edition, error) {

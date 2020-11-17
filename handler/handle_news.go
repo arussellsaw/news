@@ -37,6 +37,7 @@ func handleNews(w http.ResponseWriter, r *http.Request) {
 
 	cat := r.URL.Query().Get("cat")
 	if cat != "" {
+		e.DisableCache = true
 		newArticles := []domain.Article{}
 	articles:
 		for _, a := range e.Articles {
@@ -52,6 +53,7 @@ func handleNews(w http.ResponseWriter, r *http.Request) {
 
 	src := r.URL.Query().Get("src")
 	if src != "" {
+		e.DisableCache = true
 		newArticles := []domain.Article{}
 		for _, a := range e.Articles {
 			if a.Source.Name == src {

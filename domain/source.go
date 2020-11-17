@@ -42,8 +42,7 @@ var sources = []Source{
 		Name:       "The Verge",
 		URL:        "https://theverge.com",
 		FeedURL:    "https://www.theverge.com/rss/index.xml",
-		Categories: []string{"tech", "games", "electronics"},
-		ForceFetch: false,
+		Categories: []string{"tech", "electronics"},
 	},
 	{
 		Name:       "Polygon",
@@ -105,5 +104,23 @@ var sources = []Source{
 		URL:        "https://food52.com",
 		FeedURL:    "https://food52.com/blog.rss",
 		Categories: []string{"food"},
+	},
+	{
+		Name:       "AnandTech",
+		URL:        "https://anandtech.com",
+		FeedURL:    "https://www.anandtech.com/rss/",
+		Categories: []string{"tech", "electronics"},
+	},
+	{
+		Name:       "The Register",
+		URL:        "https://theregister.com",
+		FeedURL:    "https://www.theregister.com/headlines.atom",
+		Categories: []string{"tech", "programming"},
+	},
+	{
+		Name:       "Ars Technica",
+		URL:        "https://arstechnica.com",
+		FeedURL:    "http://feeds.arstechnica.com/arstechnica/index",
+		Categories: []string{"tech", "programming"},
 	},
 }

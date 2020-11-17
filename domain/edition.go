@@ -18,18 +18,25 @@ var (
 type layoutCache struct {
 	mu    sync.RWMutex
 	cache map[int]Article
+	id    string
 }
 
-func (c *layoutCache) Get(i int) (Article, bool) {
+func (c *layoutCache) Get(editionID string, i int) (Article, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
+	if editionID != c.id {
+		c.cache = make(map[int]Article)
+	}
 	a, ok := c.cache[i]
 	return a, ok
 }
 
-func (c *layoutCache) Set(i int, a Article) {
+func (c *layoutCache) Set(editionID string, i int, a Article) {
 	c.mu.Lock()
 	if c.cache == nil {
+		c.cache = make(map[int]Article)
+	}
+	if editionID != c.id {
 		c.cache = make(map[int]Article)
 	}
 	c.cache[i] = a
@@ -50,16 +57,17 @@ type Edition struct {
 
 	Metadata map[string]string
 
-	Article    Article
-	claimed    map[string]bool
-	cacheIndex int
+	Article      Article
+	claimed      map[string]bool
+	cacheIndex   int
+	DisableCache bool
 }
 
 func (e *Edition) GetArticle(size int, image bool) Article {
 	if e.claimed == nil {
 		e.claimed = make(map[string]bool)
 	}
-	if a, ok := lc.Get(e.cacheIndex); ok {
+	if a, ok := lc.Get(e.ID, e.cacheIndex); ok && !e.DisableCache {
 		e.cacheIndex++
 		return a
 	}
@@ -95,7 +103,9 @@ top:
 	}()
 
 	e.claimed[a.ID] = true
-	lc.Set(e.cacheIndex, a)
+	if !e.DisableCache {
+		lc.Set(e.ID, e.cacheIndex, a)
+	}
 	e.cacheIndex++
 	return a
 }

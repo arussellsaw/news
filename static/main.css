@@ -1,6 +1,10 @@
 :root[color-mode="dark"] {
     --fg: #ffffff;
     --bg: #1f1f1f;
+    --c1: #ffffff;
+    --c2: #ffffff;
+    --c3: #ffffff;
+    --c4: #ffffff;
     --thin-line: 0.5px solid #ffffff;
     --line: 1px solid #ffffff;
 }
@@ -8,16 +12,37 @@
 :root[color-mode="microfiche"] {
     --fg: #d1e389;
     --bg: #162047;
-    #--bg: #1f1f1f;
+    --c1: #d1e389;
+    --c2: #d1e389;
+    --c3: #d1e389;
+    --c4: #d1e389;
+    --c5: #d1e389;
     --thin-line: 0.5px solid #d1e389;
     --line: 1px solid #d1e389;
+}
+
+:root[color-mode="dracula"] {
+    --fg: #bd93f9;
+    --bg: #282a36;
+    --c1: #8be9fd;
+    --c2: #50fa7b;
+    --c3: #ffb86c;
+    --c4: #ff79c6;
+    --c5: #bd93f9;
+    --thin-line: 0.5px solid #f1fa8c;
+    --line: 1px solid #ff5555;
 }
 
 :root[color-mode="light"] {
     --fg: #1f1f1f;
     --bg: #ffffff;
-    --thin-line: 0.5px solid black;
-    --line: 1px solid black;
+    --c1: #1f1f1f;
+    --c2: #1f1f1f;
+    --c3: #1f1f1f;
+    --c4: #1f1f1f;
+    --c5: #1f1f1f;
+    --thin-line: 0.5px solid #1f1f1f;
+    --line: 1px solid #1f1f1f;
 }
 
 
@@ -84,11 +109,11 @@ p {
 }
 
 a {
-    color: var(--fg);
+    color: var(--c1);
 }
 
 a:hover {
-    color: var(--fg);
+    color: var(--c3);
 }
 
 @font-face {
@@ -232,6 +257,18 @@ h5 {
 .tile {
     flex-basis: inherit !important;
     flex-grow: initial !important;
+}
+
+p + p {
+    text-indent: 2ch;
+}
+
+.source-link {
+    color: var(--c4);
+}
+
+.read-more {
+    color: var(--c2);
 }
 
 .h100 {max-height: 100px !important;}

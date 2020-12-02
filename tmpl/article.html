@@ -1,19 +1,30 @@
 {{ define "content" }}
 	<div class="article" style="border: none; width: 65%; margin-left: auto; margin-right: auto">
-		<a href="{{.Link}}">
+		<a href="{{.Article.Link}}">
 			<div class="overline"></div>
-			<div style="width: 100%; text-align: center; word-wrap: break-spaces">
-				<p class="is-size-2 has-text-weight-bold">{{.Title}}</p>
+			<div style="width: 100%; text-align: left; word-wrap: break-spaces">
+				<p class="is-size-2 has-text-weight-bold">{{.Article.Title}}</p>
 			</div>
 			<div class="underline"></div>
-			<img style="width:100%; height:auto; margin-bottom: 2rem;" src="{{.ImageURL}}"/>
-			<p class="is-size-5 has-text-weight-bold">{{.Source.Name}} - {{.TS}}</p>
+			{{if not .Article.HTMLContent }}
+				<img style="width:100%; height:auto; margin-bottom: 2rem;" src="{{.Article.ImageURL}}"/>
+			{{end}}
+			<p class="is-size-5 has-text-weight-bold">{{.Article.Source.Name}} - {{.Article.TS}}</p>
 		</a>
 		<div style="margin-top: 2rem;">
-			{{range .Content}}
-				<p style="font-size: 1.3rem;">{{.Value}}</p>
-				<div style="height: 20px"></div>
+			{{if .Article.HTMLContent }}
+				<div class="article-content">
+					{{ .Article.HTMLContent }}
+				</div>
+			{{else}}
+				{{range .Article.Content}}
+					<p style="font-size: 1.3rem;">{{.Value}}</p>
+					<div style="height: 20px"></div>
+				{{end}}
 			{{end}}
 		</div>
+		{{if .User.IsAdmin }}
+			<a href="/article/refresh?id={{.Article.ID}}">Refresh</a>
+		{{end}}
 	</div>
 {{ end }}

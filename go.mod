@@ -10,6 +10,7 @@ require (
 	github.com/araddon/dateparse v0.0.0-20180729174819-cfd92a431d0e
 	github.com/boombuler/barcode v1.0.0
 	github.com/bwmarrin/snowflake v0.3.0
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/esimov/dithergo v0.0.0-20190411040508-1672f44e9674
 	github.com/fatih/color v1.10.0
 	github.com/fatih/set v0.2.1

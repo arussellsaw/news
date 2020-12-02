@@ -6,11 +6,12 @@ import (
 )
 
 type Source struct {
+	ID           string
+	OwnerID      string
 	Name         string
 	URL          string
 	FeedURL      string
 	Categories   []string
-	ForceFetch   bool
 	DisableFetch bool
 }
 

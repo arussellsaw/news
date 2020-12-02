@@ -167,6 +167,9 @@ func GetEdition(ctx context.Context, id string) (*domain.Edition, error) {
 
 func SetArticle(ctx context.Context, a *domain.Article) error {
 	_, err := client.Collection("articles").Doc(a.ID).Set(ctx, a)
+	mu.Lock()
+	delete(articleCache, a.ID)
+	mu.Unlock()
 	return err
 }
 
@@ -228,4 +231,139 @@ func GetArticlesByTime(ctx context.Context, start, end time.Time) ([]domain.Arti
 		out = append(out, a)
 	}
 	return out, nil
+}
+
+func GetUser(ctx context.Context, id string) (*domain.User, error) {
+	d, err := client.Collection("users").Doc(id).Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+	u := domain.User{}
+	err = d.DataTo(&u)
+	return &u, err
+}
+
+func SetUser(ctx context.Context, u *domain.User) error {
+	_, err := client.Collection("users").Doc(u.ID).Set(ctx, u)
+	return err
+}
+
+func GetUserByName(ctx context.Context, name string) (*domain.User, error) {
+	iter := client.Collection("users").Where("Name", "==", name).Documents(ctx)
+	docs, err := iter.GetAll()
+	if err != nil {
+		return nil, err
+	}
+	if len(docs) == 0 {
+		return nil, nil
+	}
+	u := domain.User{}
+	err = docs[0].DataTo(&u)
+	return &u, err
+}
+
+func GetSource(ctx context.Context, id string) (*domain.Source, error) {
+	d, err := client.Collection("sources").Doc(id).Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+	s := domain.Source{}
+	err = d.DataTo(&s)
+	return &s, err
+}
+
+func SetSource(ctx context.Context, s *domain.Source) error {
+	_, err := client.Collection("sources").Doc(s.ID).Set(ctx, s)
+	return err
+}
+
+func DeleteSource(ctx context.Context, id string) error {
+	_, err := client.Collection("sources").Doc(id).Delete(ctx)
+	return err
+}
+
+func GetSources(ctx context.Context, ownerID string) ([]domain.Source, error) {
+	iter := client.Collection("sources").Where("OwnerID", "==", ownerID).Documents(ctx)
+	docs, err := iter.GetAll()
+	if err != nil {
+		return nil, err
+	}
+	if len(docs) == 0 {
+		return nil, nil
+	}
+	sources := make([]domain.Source, 0, len(docs))
+	for _, doc := range docs {
+		s := domain.Source{}
+		err = doc.DataTo(&s)
+		if err != nil {
+			return nil, err
+		}
+		sources = append(sources, s)
+	}
+	return sources, nil
+}
+
+func GetAllSources(ctx context.Context) ([]domain.Source, error) {
+	iter := client.Collection("sources").Documents(ctx)
+	docs, err := iter.GetAll()
+	if err != nil {
+		return nil, err
+	}
+	if len(docs) == 0 {
+		return nil, nil
+	}
+	sources := make([]domain.Source, 0, len(docs))
+	for _, doc := range docs {
+		s := domain.Source{}
+		err = doc.DataTo(&s)
+		if err != nil {
+			return nil, err
+		}
+		sources = append(sources, s)
+	}
+	return sources, nil
+}
+
+func GetArticlesForOwner(ctx context.Context, ownerID string, start, end time.Time) ([]domain.Article, []domain.Source, error) {
+	sources, err := GetSources(ctx, ownerID)
+	if err != nil {
+		return nil, nil, err
+	}
+	g := errgroup.Group{}
+	articles := make(chan domain.Article, 1024)
+	for _, s := range sources {
+		s := s
+		g.Go(func() error {
+			docs, err := client.Collection("articles").
+				Where("Source.FeedURL", "==", s.FeedURL).
+				Where("Timestamp", ">", start).
+				Where("Timestamp", "<", end).
+				Documents(ctx).
+				GetAll()
+			if err != nil {
+				return err
+			}
+			for _, doc := range docs {
+				a := domain.Article{}
+				err = doc.DataTo(&a)
+				if err != nil {
+					return err
+				}
+				articles <- a
+			}
+			return nil
+		})
+	}
+	go func() {
+		err = g.Wait()
+		close(articles)
+	}()
+	out := []domain.Article{}
+	for article := range articles {
+		out = append(out, article)
+	}
+	if err != nil {
+		return nil, nil, err
+	}
+	return out, sources, nil
 }

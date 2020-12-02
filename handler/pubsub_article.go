@@ -3,16 +3,14 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/arussellsaw/news/dao"
 	"github.com/arussellsaw/news/idgen"
-	"github.com/thatguystone/swan"
-	"io/ioutil"
-	"net/http"
-	"strings"
-	"time"
-	"unicode/utf8"
-
 	"github.com/monzo/slog"
+	"html/template"
+	"net/http"
+	"net/url"
+	"strings"
 
 	"github.com/arussellsaw/news/domain"
 )
@@ -51,43 +49,32 @@ func handlePubsubArticle(w http.ResponseWriter, r *http.Request) {
 	slogParams := map[string]string{
 		"url": e.Article.Link,
 	}
-	var content string
-	res, err := c.Get(e.Article.Link)
+	res, err := c.Get(fmt.Sprintf("https://readability-server.russellsaw.io/?url=%s", url.QueryEscape(e.Article.Link)))
 	if err != nil {
 		slog.Error(ctx, "Error fetching article: %s", err, slogParams)
 		return
 	}
-	buf, err := ioutil.ReadAll(res.Body)
+	var article = struct {
+		Body     string `json:"body"`
+		BodyText string `json:"body_text"`
+	}{}
+	err = json.NewDecoder(res.Body).Decode(&article)
 	if err != nil {
-		slog.Error(ctx, "Error reading article: %s", err, slogParams)
-		return
-	}
-	article, err := swan.FromHTML(e.Article.Link, buf)
-	if err != nil {
-		slog.Error(ctx, "Error parsing article: %s", err, slogParams)
-		return
-	}
-	content = article.CleanedText
-	if !utf8.Valid([]byte(content)) {
-		slog.Error(ctx, "Skipping invalid utf8 in document: %s - %s", e.Article.Link, e.Article.Title)
+		slog.Error(ctx, "Error fetching article: %s", err, slogParams)
 		return
 	}
 
 	a := domain.Article{
 		ID:          idgen.New("art"),
 		Title:       e.Article.Title,
-		Description: article.Meta.Description,
-		Content:     toElements(content, "\n"),
-		ImageURL: func() string {
-			if article.Img != nil {
-				return article.Img.Src
-			}
-			return ""
-		}(),
-		Link:      e.Article.Link,
-		Source:    e.Article.Source,
-		Timestamp: time.Now(),
-		TS:        time.Now().Format("Mon Jan 2 15:04"),
+		Description: e.Article.Description,
+		Content:     toElements(article.BodyText, "\n"),
+		HTMLContent: template.HTML(article.Body),
+		ImageURL:    e.Article.ImageURL,
+		Link:        e.Article.Link,
+		Source:      e.Article.Source,
+		Timestamp:   e.Article.Timestamp,
+		TS:          e.Article.Timestamp.Format("Mon Jan 2 15:04"),
 	}
 	err = dao.SetArticle(ctx, &a)
 	if err != nil {

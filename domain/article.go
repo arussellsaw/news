@@ -1,12 +1,16 @@
 package domain
 
-import "time"
+import (
+	"html/template"
+	"time"
+)
 
 type Article struct {
 	ID          string
 	Title       string
 	Description string
 	Content     []Element
+	HTMLContent template.HTML
 	ImageURL    string
 	Link        string
 	Author      string

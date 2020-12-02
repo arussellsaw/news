@@ -1,0 +1,28 @@
+{{define "content"}}
+    <div style="
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 5rem;
+        width: 30%;">
+    <form action="/login" method="post" style="
+        display: flex;
+        flex-direction: column;
+        align-items: center;">
+        <input class="text-input" type="text" id="username" value="Username" name="username"
+               onfocus="if(this.value==='Username') {this.value=''}"
+               onblur="if(this.value==='') {this.value='Username'}" />
+        <input class="text-input" type="text" id="pw" value="Password" name="pw"
+               onfocus="if(this.value==='Password') {this.value='', this.type='password'}"
+               onblur="if(this.value==='') {this.value='Password', this.type='text'}" />
+        <div style="margin-top: 1rem;">
+        <label for="signup">Sign up:</label>
+        <input type="checkbox" id="signup" name="signup"/>
+        </div>
+        <input class="submit" type="submit" value="Submit" style="margin-top: 1rem;"/>
+    </form>
+    </div>
+{{end}}
+
+{{define "topbar"}}
+    <div></div>
+{{end}}

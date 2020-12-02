@@ -3,7 +3,6 @@ package domain
 import (
 	"context"
 	"github.com/arussellsaw/news/idgen"
-	"sort"
 	"sync"
 	"time"
 )
@@ -61,53 +60,6 @@ type Edition struct {
 	claimed      map[string]bool
 	cacheIndex   int
 	DisableCache bool
-}
-
-func (e *Edition) GetArticle(size int, image bool) Article {
-	if e.claimed == nil {
-		e.claimed = make(map[string]bool)
-	}
-	if a, ok := lc.Get(e.ID, e.cacheIndex); ok && !e.DisableCache {
-		e.cacheIndex++
-		return a
-	}
-top:
-	candidates := []Article{}
-	for _, a := range e.Articles {
-		if a.Size() >= size {
-			if a.ImageURL == "" && image {
-				continue
-			}
-			if e.claimed[a.ID] {
-				continue
-			}
-			a.Layout = Layout{}
-			candidates = append(candidates, a)
-		}
-	}
-	if len(candidates) == 0 && size > 0 {
-		size -= 100
-		goto top
-	} else if len(candidates) == 0 {
-		return Article{}
-	}
-	sort.Slice(candidates, func(i, j int) bool {
-		return candidates[i].Timestamp.Before(candidates[i].Timestamp)
-	})
-	a := candidates[0]
-	a.ImageURL = func() string {
-		if image {
-			return a.ImageURL
-		}
-		return ""
-	}()
-
-	e.claimed[a.ID] = true
-	if !e.DisableCache {
-		lc.Set(e.ID, e.cacheIndex, a)
-	}
-	e.cacheIndex++
-	return a
 }
 
 func NewEdition(ctx context.Context, now time.Time) (*Edition, error) {

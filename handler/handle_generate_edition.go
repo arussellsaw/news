@@ -32,7 +32,7 @@ func handleGenerateEdition(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	start := time.Now().Add(-48 * time.Hour)
+	start := time.Now().Add(-72 * time.Hour)
 	end := time.Now()
 	articles, err := dao.GetArticlesByTime(ctx, start, end)
 	if err != nil {

@@ -1,0 +1,46 @@
+{{define "content"}}
+    <div style="width: 60%;
+                display: flex;
+                margin-left: auto;
+                margin-right: auto;
+                align-items: center;
+                flex-direction: column;">
+        {{ if eq .Data.Action "delete" }}
+            <h3>Delete {{.Data.Name}}?</h3>
+                <form action="/settings/source" method="post">
+                    <input type="hidden" id="id" value="{{.Data.ID}}" name="id"/>
+                    <input type="hidden" id="confirm" value="true" name="confirm"/>
+                    <input type="hidden" id="action" value="delete" name="action"/>
+                    <input class="submit" type="submit" value="Delete" style="margin-top: 1rem;"/>
+                </form>
+        {{ end}}
+        {{if eq .Data.Action "edit"}}
+            <h2>Edit</h2>
+            <form action="/settings/source" method="get" style="
+                display: flex;
+                flex-direction: column;
+                align-items: center;">
+                <input type="hidden" id="id" value="{{.Data.ID}}" name="id"/>
+                <input type="hidden" id="confirm" value="true" name="confirm"/>
+                <input type="hidden" id="action" value="edit" name="action"/>
+                <div style="display: flex; flex-direction: row; align-items: baseline">
+                    <label style="width: 15rem; margin-right: 1rem; text-align: right">Name:</label>
+                    <input class="text-input" type="text" id="name" value="{{.Data.Name}}" name="name"/>
+                </div>
+                <div style="display: flex; flex-direction: row; align-items: baseline">
+                    <label style="width: 15rem; margin-right: 1rem; text-align: right">Homepage URL:</label>
+                    <input class="text-input" type="text" id="url" value="{{.Data.URL}}" name="url"/>
+                </div>
+                <div style="display: flex; flex-direction: row; align-items: baseline">
+                    <label style="width: 15rem; margin-right: 1rem; text-align: right">RSS Feed URL:</label>
+                    <input class="text-input" type="text" id="feed_url" value="{{.Data.FeedURL}}" name="feed_url"/>
+                </div>
+                <div style="display: flex; flex-direction: row; align-items: baseline">
+                    <label style="width: 15rem; margin-right: 1rem; text-align: right">Categories:</label>
+                    <input class="text-input" type="text" id="categories" value="{{.Data.CategoriesString}}" name="categories"/>
+                </div>
+                <input class="submit" type="submit" value="Save" style="margin-top: 1rem;"/>
+            </form>
+        {{end}}
+    </div>
+{{end}}

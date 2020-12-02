@@ -45,6 +45,53 @@
     --line: 1px solid #1f1f1f;
 }
 
+:root[font-mode="serif"] {
+    --font: Georgia, serif;
+    --title-font: "OldEnglish", Georgia, serif;
+    --title-justify: flex-start;
+    --thin-line: 0px solid #d1e389;
+    --line: 0px solid #d1e389;
+}
+
+:root[font-mode="sans"] {
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    --title-font: "OldEnglish", Georgia, serif;
+    --title-justify: flex-start;
+    --thin-line: 0px solid #d1e389;
+    --line: 0px solid #d1e389;
+}
+
+:root[font-size="regular"] {
+    --font-size: 0.8rem;
+    --big-font-size: 1.2rem;
+}
+
+:root[font-size="big"] {
+    --font-size: 1rem;
+    --big-font-size: 1.6rem;
+}
+
+.sans {
+    font-family: Helvetica, sans-serif;
+    margin-bottom: 0.5rem;
+}
+
+.serif {
+    font-family: Georgia, serif;
+    margin-bottom: 0.5rem;
+}
+
+.regular {
+    font-size: 0.8rem;
+    margin-right: 0.5rem;
+    margin-left: 0.5rem;
+}
+
+.big {
+    font-size: 1rem;
+    margin-right: 0.5rem;
+    margin-left: 0.5rem;
+}
 
 :root[color-mode="dark"]  .dark-invert {
     filter: invert(100%);
@@ -55,6 +102,14 @@
 }
 
 :root[color-mode="dark"]  .dark--hidden {
+    display: none;
+}
+
+:root[font-mode="sans"] .sans-hidden {
+    display: none;
+}
+
+:root[font-mode="serif"] .serif-hidden {
     display: none;
 }
 
@@ -79,6 +134,38 @@
     cursor: pointer;
     background: none;
     border: none;
+    padding-left: 0px !important;
+    padding-right: 0px !important;
+}
+
+.style-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--fg, #111111);
+    cursor: pointer;
+    background: none;
+    border: none;
+    position: relative;
+}
+
+.style-config {
+    position: absolute;
+    top: 3rem;
+    float: right;
+    width: 80px;
+    border: 1px solid var(--fg);
+    border-radius: 3px;
+    background-color: var(--bg);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 0.5rem;
+    align-items: center;
+    transform: translate(-80px, 0);
 }
 
 .color-mode__btn svg {
@@ -90,6 +177,7 @@
     stroke-linecap: round;
     stroke-linejoin: round;
     stroke-width: 1.5px;
+    padding: 0px;
 }
 
 .color-mode__btn:hover svg,
@@ -101,7 +189,7 @@
 body,html {
     background-color: var(--bg);
     color: var(--fg);
-    font-family: Georgia, serif;
+    font-family: var(--font);
 }
 
 p {
@@ -126,27 +214,47 @@ a:hover {
     src: url("/static/fonts/OldEnglishFive-axyVg.woff");
 }
 
+.title-container {
+    display: flex;
+    justify-content: var(--title-justify);
+}
+
+:root[font-mode="sans"] .title-container {
+    margin-bottom: 0px;
+}
+
+
 h1 {
-    font-size: 4rem;
-    font-family: "OldEnglish", Georgia, serif;
+    font-size: 3.5rem !important;
+    font-family: var(--title-font);
+    font-weight: 900;
+    margin: 0rem !important;
+    color: var(--fg);
 }
 
 h2 {
     font-size: 3rem;
     font-weight: 600;
     word-wrap: break-spaces !important;
+    color: var(--fg);
+}
+
+strong {
+    color: var(--fg);
 }
 
 h3 {
     font-size: 1.1rem;
     font-weight: 600;
     margin-bottom: 1rem;
+    color: var(--fg);
 }
 
 h4 {
     font-size: 2rem;
     font-weight: 600;
     margin-bottom: 1rem;
+    color: var(--fg);
 }
 
 h5 {
@@ -154,6 +262,7 @@ h5 {
     font-weight: 600;
     margin-bottom: 1rem;
     margin-top: 1rem;
+    color: var(--fg);
 }
 
 .bar {
@@ -203,7 +312,7 @@ h5 {
     border-bottom: none;
     padding-right: 0.25rem;
     padding-left: 0.25rem;
-    font-size: 0.8rem;
+    font-size: var(--font-size);
     overflow-x: hidden;
     overflow-y: hidden !important;
     border-right: var(--thin-line);
@@ -259,10 +368,6 @@ h5 {
     flex-grow: initial !important;
 }
 
-p + p {
-    text-indent: 2ch;
-}
-
 .source-link {
     color: var(--c4);
 }
@@ -295,3 +400,109 @@ p + p {
 .h1150 {max-height: 1150px !important;}
 .h1200 {max-height: 1200px !important;}
 
+.text-input {
+    width: 100%;
+    height: 2rem;
+    border: none;
+    border-bottom: 2px solid var(--fg);
+    margin-top: 1rem;
+    font-family: var(--font);
+    font-size: 16pt;
+    color: var(--fg);
+    background-color: var(--bg);
+}
+
+.submit {
+    width: 15rem;
+    line-height: 2rem;
+    border: 2px solid var(--fg);
+    border-radius: 10px;
+    background-color: var(--bg);
+    font-family: var(--font);
+    font-size: 16pt;;
+    color: var(--fg);
+}
+
+.error-box {
+    width: 50%;
+    margin-top: 5rem;
+    margin-left: auto;
+    margin-right: auto;
+    background-color: var(--bg);
+    color: #be1517;
+    border: 2px solid #be1517;
+    padding: 1.5rem;
+    border-radius: 1rem;
+}
+
+.article-content {
+    margin-bottom: 20rem;
+}
+
+.article-content h1 {
+    font-size: 1.5rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+.article-content h2 {
+    font-size: 1.4rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+.article-content h3 {
+    font-size: 1.1rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+.article-content h4 {
+    font-size: 1rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+.article-content h5 {
+    font-size: 1rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+.article-content p,em {
+    font-size: var(--big-font-size);
+    margin-top: 1rem;
+}
+
+.article-content img {
+    width: 100%;
+    height: auto;
+    margin-top: 1rem;
+}
+
+.article-content a {
+    text-decoration: underline;
+}
+
+.article-content figcaption,time,figure {
+    font-size: var(--font-size);
+}
+
+figcaption p {
+    font-size: var(--font-size) !important;
+}
+
+.article-content svg {
+    display: none;
+}
+
+.article-content code {
+    background-color: var(--bg);
+    color: var(--fg);
+    font-size: var(--font-size) !important;
+}
+
+.article-content pre {
+    background-color: var(--bg);
+    color: var(--fg);
+    font-size: var(--font-size) !important;
+    filter: brightness(0.8);
+    margin-top: 1rem;
+    border-radius: 20px;
+}

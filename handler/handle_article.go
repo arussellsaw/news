@@ -1,13 +1,11 @@
 package handler
 
 import (
+	"github.com/arussellsaw/news/dao"
 	"github.com/arussellsaw/news/domain"
+	"github.com/monzo/slog"
 	"html/template"
 	"net/http"
-	"time"
-
-	"github.com/arussellsaw/news/dao"
-	"github.com/monzo/slog"
 )
 
 func handleArticle(w http.ResponseWriter, r *http.Request) {
@@ -21,21 +19,30 @@ func handleArticle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	edition, err := dao.GetEditionForTime(ctx, time.Now(), true)
-	if err != nil {
-		http.Error(w, err.Error(), 500)
-		return
-	}
 	article, err := dao.GetArticle(ctx, r.URL.Query().Get("id"))
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
+	u := domain.UserFromContext(ctx)
+	if u != nil {
+		sources, err := dao.GetSources(ctx, u.ID)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		for _, src := range sources {
+			if src.FeedURL == article.Source.FeedURL {
+				article.Source = src
+			}
+		}
+	}
+
 	a := articlePage{
-		Article:    article,
-		Categories: edition.Categories,
-		Name:       edition.Name,
-		Date:       edition.Date,
+		Article: article,
+		base: base{
+			User: domain.UserFromContext(ctx),
+		},
 	}
 	err = t.Execute(w, a)
 	if err != nil {
@@ -46,8 +53,6 @@ func handleArticle(w http.ResponseWriter, r *http.Request) {
 }
 
 type articlePage struct {
-	*domain.Article
-	Categories []string
-	Name       string
-	Date       string
+	Article *domain.Article
+	base
 }

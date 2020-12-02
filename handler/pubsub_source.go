@@ -2,8 +2,10 @@ package handler
 
 import (
 	"encoding/json"
+	"math/rand"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/mmcdole/gofeed"
 	"github.com/monzo/slog"
@@ -33,6 +35,7 @@ func handlePubsubSource(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	slog.Info(ctx, "handling %s", e.Source.Name)
 	fp := gofeed.NewParser()
 	feed, err := fp.ParseURL(e.Source.FeedURL)
 	if err != nil {
@@ -53,6 +56,12 @@ func handlePubsubSource(w http.ResponseWriter, r *http.Request) {
 				}(),
 				Link:   item.Link,
 				Source: e.Source,
+				Timestamp: func() time.Time {
+					if item.PublishedParsed != nil {
+						return *item.PublishedParsed
+					}
+					return time.Now().Add(-time.Duration(rand.Intn(60)) * time.Minute)
+				}(),
 			},
 		})
 		if err != nil {

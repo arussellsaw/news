@@ -1,0 +1,15 @@
+{
+  "name": "readability-server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@mozilla/readability": "^0.3.0",
+    "dompurify": "^2.2.2",
+    "jsdom": "^16.4.0",
+    "node-fetch": "^2.6.1"
+  },
+  "scripts": {
+    "start": "node ./index.js"
+  }
+}

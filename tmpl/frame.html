@@ -4,6 +4,11 @@
 
     <link rel="stylesheet" href="/static/bulma.min.css" type="text/css"/>
     <link rel="stylesheet" href="/static/main.css?cb=20201114" type="text/css"/>
+    <link rel="stylesheet" href="/static/normalize.css" type="text/css"/>
+
+    <link rel="shortcut icon" href="/static/favicon.png" />
+    <link rel="apple-touch-icon" href="/static/favicon.png" />
+    <link rel="apple-touch-icon-precomposed" href="/static/favicon.png" />
 
     <script>
         (function (global, factory) {
@@ -90,26 +95,40 @@
         } else {
             document.documentElement.setAttribute("color-mode", mode);
         }
+
+        const font = localStorage.getItem("font-mode")
+        if (!localStorage.getItem("font-mode")) {
+            document.documentElement.setAttribute("font-mode", "serif");
+        } else {
+            document.documentElement.setAttribute("font-mode", font);
+        }
+
+        const size = localStorage.getItem("font-size")
+        if (!localStorage.getItem("font-mode")) {
+            document.documentElement.setAttribute("font-size", "regular");
+        } else {
+            document.documentElement.setAttribute("font-size", size);
+        }
     </script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             var lazyloadImages;
 
-                lazyloadImages = document.querySelectorAll(".lazy");
-                var imageObserver = new IntersectionObserver(function(entries, observer) {
-                    entries.forEach(function(entry) {
-                        if (entry.isIntersecting) {
-                            var image = entry.target;
-                            image.src = image.dataset.src;
-                            image.classList.remove("lazy");
-                            imageObserver.unobserve(image);
-                        }
-                    });
+            lazyloadImages = document.querySelectorAll(".lazy");
+            var imageObserver = new IntersectionObserver(function(entries, observer) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        var image = entry.target;
+                        image.src = image.dataset.src;
+                        image.classList.remove("lazy");
+                        imageObserver.unobserve(image);
+                    }
                 });
+            });
 
-                lazyloadImages.forEach(function(image) {
-                    imageObserver.observe(image);
-                });
+            lazyloadImages.forEach(function(image) {
+                imageObserver.observe(image);
+            });
         })
     </script>
     <script>
@@ -152,102 +171,144 @@
     </symbol>
 </svg>
 <div class="container is-fluid" style="max-width: 1200px;">
-    <div class="bar level" style="margin-top:0.5rem;">
-        {{range .Categories}}
-            <div class="level-item has-text-centered has-text-weight-bold is-uppercase" >
-                <a href="/?cat={{.}}"><p style="font-size: 0.7rem">{{.}}</p></a>
+    <div class="level" style="align-items: baseline; margin-left: 1rem; margin-right: 1rem; margin-bottom: 1rem">
+        {{ range .Categories }}
+            <a href="/?cat={{.}}">{{.}}</a>
+        {{ end }}
+        <div class="level-right" style="margin-top: 1rem;">
+            <button class="style-button" aria-label="Open style menu">
+                Aa
+            </button>
+            <div class="style-config" style="display:none">
+                <div style="display: flex; width: 100%; margin-bottom: 10px; justify-content: space-between;">
+                    <button
+                            class="color-mode__btn"
+                            aria-label="Toggle light mode"
+                    >
+                        <svg onclick="light()">
+                            <title>Light Mode</title>
+                            <use href="#sun"></use>
+                        </svg>
+                    </button>
+                    <button
+                            class="color-mode__btn"
+                            aria-label="Toggle dark mode"
+                    >
+                        <svg onclick="dark()">
+                            <title>Dark Mode</title>
+                            <use href="#moon"></use>
+                        </svg>
+                    </button>
+                </div>
+                <div style="display: flex; margin-bottom: 10px; align-items: baseline;">
+                    <button class="color-mode__btn" onclick="regular()">
+                        <span class="regular">A</span>
+                    </button>
+                    <button class="color-mode__btn" onclick="big()">
+                        <span class="big">A</span>
+                    </button>
+                </div>
+                <button class="color-mode__btn sans" onclick="sans()">
+                    Sans
+                </button>
+                <button class="color-mode__btn serif" onclick="serif()">
+                    Serif
+                </button>
             </div>
-        {{end}}
-        <button
-                class="color-mode__btn light--hidden"
-                aria-label="Toggle light mode"
-        >
-            <svg aria-hidden="true">
-                <title>Light Mode</title>
-                <use href="#sun"></use>
-            </svg>
-        </button>
-        <button
-                class="color-mode__btn dark--hidden"
-                aria-label="Toggle dark mode"
-        >
-            <svg aria-hidden="true">
-                <title>Dark Mode</title>
-                <use href="#moon"></use>
-            </svg>
-        </button>
+            <script>
+                var toggleStyle = document.querySelector(".style-button"); // Set up event listeners
+                toggleStyle.addEventListener("click", ev => {
+                    const e =document.querySelector(".style-config")
+                    console.log(e)
+                    if (e.style.display === 'none') {
+                        e.style.display = 'flex'
+                    } else {
+                        e.style.display = 'none'
+                    }
+                });
+            </script>
+            {{ if .User }}
+                <a style="margin-left: 2rem;" href="/settings">{{.User.Name}}</a>
+            {{ else }}
+                <a  style="margin-left: 2rem;" href="/login">log in</a>
+            {{ end }}
+        </div>
     </div>
-    <nav class="level" style="overflow: hidden;">
-        <div class="level-left">
-            <div class="sidebox-left level-item is-hidden-touch">
-                <p>"RSS Feeds for the 20th century"</p>
+    <div class="level" style="margin-top:0rem; align-items: flex-start">
+        <nav class="level" style="
+        overflow: hidden;
+        width: 100%;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+">
+            <div class="level-left title-container">
+                <a href="/"><h1>The Webpage</h1></a>
             </div>
-        </div>
-        <div class="level-item has-text-centered">
-            <a href="/"><h1>The Webpage</h1></a>
-        </div>
-        <div class="level-right">
-            <div class="sidebox-right level-item is-hidden-touch">
-                <p>{{ .Name }}</p>
-            </div>
-        </div>
-    </nav>
-    <div class="bar level">
-        <div class="level-left">
-            <div class="level-item" onClick="microfiche()">
-                {{.ID}}
-            </div>
-        </div>
-        <div class="level-left">
-            <div class="level-item" onClick="dracula()">
-                {{.Date}}
-            </div>
-        </div>
+        </nav>
     </div>
-    {{ template "content" . }}
+    {{ if .Error }}
+        <div class="error-box">
+            <h3>Error</h3>
+            <p>{{.Error}}</p>
+        </div>
+    {{else}}
+        {{ template "content" . }}
+    {{end}}
 </div>
 </body>
 <script>
-    if (window.CSS && CSS.supports("color", "var(--fg)")) {
-        var toggleColorMode = function toggleColorMode(e) {
-// Switch to Light Mode
-            if (e.currentTarget.classList.contains("light--hidden")) {
-// Sets the custom html attribute
-                document.documentElement.setAttribute("color-mode", "light"); // Sets the user's preference in local storage
+    var dark = function() {
+        document.documentElement.setAttribute("color-mode", "dark"); // Sets the user's preference in local storage
 
-                localStorage.setItem("color-mode", "light");
-                return;
-            }
-            /* Switch to Dark Mode
-            Sets the custom html attribute */
-            document.documentElement.setAttribute("color-mode", "dark"); // Sets the user's preference in local storage
+        localStorage.setItem("color-mode", "dark");
+        return;
+    }
 
-            localStorage.setItem("color-mode", "dark");
-        };
+    var light = function() {
+        document.documentElement.setAttribute("color-mode", "light"); // Sets the user's preference in local storage
 
-        var microfiche = function() {
-            document.documentElement.setAttribute("color-mode", "microfiche"); // Sets the user's preference in local storage
+        localStorage.setItem("color-mode", "light");
+        return;
+    }
 
-            localStorage.setItem("color-mode", "microfiche");
-            return;
-        }
+    var microfiche = function() {
+        document.documentElement.setAttribute("color-mode", "microfiche"); // Sets the user's preference in local storage
 
-        var dracula = function() {
-            document.documentElement.setAttribute("color-mode", "dracula"); // Sets the user's preference in local storage
+        localStorage.setItem("color-mode", "microfiche");
+        return;
+    }
 
-            localStorage.setItem("color-mode", "dracula");
-            return;
-        }
+    var dracula = function() {
+        document.documentElement.setAttribute("color-mode", "dracula"); // Sets the user's preference in local storage
 
-        var toggleColorButtons = document.querySelectorAll(".color-mode__btn"); // Set up event listeners
+        localStorage.setItem("color-mode", "dracula");
+        return;
+    }
 
-        toggleColorButtons.forEach(function(btn) {
-            btn.addEventListener("click", toggleColorMode);
-        });
-    } else {
-// If the feature isn't supported, then we hide the toggle buttons
-        var btnContainer = document.querySelector(".color-mode__header");
-        btnContainer.style.display = "none";
+    var sans = function() {
+        document.documentElement.setAttribute("font-mode", "sans"); // Sets the user's preference in local storage
+
+        localStorage.setItem("font-mode", "sans");
+    }
+
+    var serif = function() {
+        document.documentElement.setAttribute("font-mode", "serif"); // Sets the user's preference in local storage
+
+        localStorage.setItem("font-mode", "serif");
+    }
+
+    var big = function() {
+        document.documentElement.setAttribute("font-size", "big"); // Sets the user's preference in local storage
+
+        localStorage.setItem("font-size", "big");
+        location.reload()
+    }
+
+    var regular = function() {
+        document.documentElement.setAttribute("font-size", "regular"); // Sets the user's preference in local storage
+
+        localStorage.setItem("font-size", "regular");
+        location.reload()
     }
 </script>
 </html>

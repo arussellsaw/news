@@ -23,8 +23,10 @@
 				{{end}}
 			{{end}}
 		</div>
+		{{if .User}}
 		{{if .User.IsAdmin }}
 			<a href="/article/refresh?id={{.Article.ID}}">Refresh</a>
+		{{end}}
 		{{end}}
 	</div>
 {{ end }}

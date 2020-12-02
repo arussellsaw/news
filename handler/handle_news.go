@@ -127,10 +127,13 @@ func handleNews(w http.ResponseWriter, r *http.Request) {
 
 	cat := r.URL.Query().Get("cat")
 	if cat != "" {
-		sources, err := dao.GetSources(ctx, u.ID)
-		if err != nil {
-			http.Error(w, "Error getting sources", 500)
-			return
+		sources := domain.GetSources()
+		if u != nil {
+			sources, err = dao.GetSources(ctx, u.ID)
+			if err != nil {
+				http.Error(w, "Error getting sources", 500)
+				return
+			}
 		}
 		sourceCats := make(map[string][]string)
 		for _, s := range sources {
@@ -246,6 +249,10 @@ top:
 		size -= 100
 		goto top
 	} else if len(candidates) == 0 {
+		if image {
+			image = false
+			goto top
+		}
 		return domain.Article{}
 	}
 	sort.Slice(candidates, func(i, j int) bool {

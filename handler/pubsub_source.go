@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"github.com/arussellsaw/news/dao"
 	"math/rand"
 	"net/http"
 	"strings"
@@ -44,7 +45,15 @@ func handlePubsubSource(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, item := range feed.Items {
-		err := p.Publish(ctx, "articles", ArticleEvent{
+		a, err := dao.GetArticleByURL(ctx, item.Link)
+		if err != nil {
+			slog.Error(ctx, "Error getting article: %s", err)
+			continue
+		}
+		if a != nil {
+			continue
+		}
+		err = p.Publish(ctx, "articles", ArticleEvent{
 			Article: domain.Article{
 				Title:       strings.TrimSpace(item.Title),
 				Description: item.Description,

@@ -1,20 +1,29 @@
 // Package minify relates MIME type to minifiers. Several minifiers are provided in the subpackages.
-package minify // import "github.com/tdewolff/minify"
+package minify
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
 	"io"
+	"io/ioutil"
+	"log"
 	"mime"
 	"net/http"
 	"net/url"
+	"os"
 	"os/exec"
 	"path"
 	"regexp"
+	"strings"
 	"sync"
 
 	"github.com/tdewolff/parse/v2"
 	"github.com/tdewolff/parse/v2/buffer"
 )
+
+// Warning is used to report usage warnings such as using a deprecated feature
+var Warning = log.New(os.Stderr, "WARNING: ", 0)
 
 // ErrNotExist is returned when no minifier exists for a given mimetype.
 var ErrNotExist = errors.New("minifier does not exist for mimetype")
@@ -46,18 +55,59 @@ type cmdMinifier struct {
 	cmd *exec.Cmd
 }
 
+var cmdArgExtension = regexp.MustCompile(`^\.[0-9a-zA-Z]+`)
+
 func (c *cmdMinifier) Minify(_ *M, w io.Writer, r io.Reader, _ map[string]string) error {
 	cmd := &exec.Cmd{}
 	*cmd = *c.cmd // concurrency safety
-	cmd.Stdout = w
-	cmd.Stdin = r
-	return cmd.Run()
+
+	var in, out *os.File
+	for i, arg := range cmd.Args {
+		if j := strings.Index(arg, "$in"); j != -1 {
+			var err error
+			ext := cmdArgExtension.FindString(arg[j+3:])
+			if in, err = ioutil.TempFile("", "minify-in-*"+ext); err != nil {
+				return err
+			}
+			cmd.Args[i] = arg[:j] + in.Name() + arg[j+3+len(ext):]
+		} else if j := strings.Index(arg, "$out"); j != -1 {
+			var err error
+			ext := cmdArgExtension.FindString(arg[j+4:])
+			if out, err = ioutil.TempFile("", "minify-out-*"+ext); err != nil {
+				return err
+			}
+			cmd.Args[i] = arg[:j] + out.Name() + arg[j+4+len(ext):]
+		}
+	}
+
+	if in == nil {
+		cmd.Stdin = r
+	} else if _, err := io.Copy(in, r); err != nil {
+		return err
+	}
+	if out == nil {
+		cmd.Stdout = w
+	} else {
+		defer io.Copy(w, out)
+	}
+	stderr := &bytes.Buffer{}
+	cmd.Stderr = stderr
+
+	err := cmd.Run()
+	if _, ok := err.(*exec.ExitError); ok {
+		if stderr.Len() != 0 {
+			err = fmt.Errorf("%s", stderr.String())
+		}
+		err = fmt.Errorf("command %s failed: %w", cmd.Path, err)
+	}
+	return err
 }
 
 ////////////////////////////////////////////////////////////////
 
 // M holds a map of mimetype => function to allow recursive minifier calls of the minifier functions.
 type M struct {
+	mutex   sync.RWMutex
 	literal map[string]Minifier
 	pattern []patternMinifier
 
@@ -67,6 +117,7 @@ type M struct {
 // New returns a new M.
 func New() *M {
 	return &M{
+		sync.RWMutex{},
 		map[string]Minifier{},
 		[]patternMinifier{},
 		nil,
@@ -75,40 +126,55 @@ func New() *M {
 
 // Add adds a minifier to the mimetype => function map (unsafe for concurrent use).
 func (m *M) Add(mimetype string, minifier Minifier) {
+	m.mutex.Lock()
 	m.literal[mimetype] = minifier
+	m.mutex.Unlock()
 }
 
 // AddFunc adds a minify function to the mimetype => function map (unsafe for concurrent use).
 func (m *M) AddFunc(mimetype string, minifier MinifierFunc) {
+	m.mutex.Lock()
 	m.literal[mimetype] = minifier
+	m.mutex.Unlock()
 }
 
 // AddRegexp adds a minifier to the mimetype => function map (unsafe for concurrent use).
 func (m *M) AddRegexp(pattern *regexp.Regexp, minifier Minifier) {
+	m.mutex.Lock()
 	m.pattern = append(m.pattern, patternMinifier{pattern, minifier})
+	m.mutex.Unlock()
 }
 
 // AddFuncRegexp adds a minify function to the mimetype => function map (unsafe for concurrent use).
 func (m *M) AddFuncRegexp(pattern *regexp.Regexp, minifier MinifierFunc) {
+	m.mutex.Lock()
 	m.pattern = append(m.pattern, patternMinifier{pattern, minifier})
+	m.mutex.Unlock()
 }
 
 // AddCmd adds a minify function to the mimetype => function map (unsafe for concurrent use) that executes a command to process the minification.
 // It allows the use of external tools like ClosureCompiler, UglifyCSS, etc. for a specific mimetype.
 func (m *M) AddCmd(mimetype string, cmd *exec.Cmd) {
+	m.mutex.Lock()
 	m.literal[mimetype] = &cmdMinifier{cmd}
+	m.mutex.Unlock()
 }
 
 // AddCmdRegexp adds a minify function to the mimetype => function map (unsafe for concurrent use) that executes a command to process the minification.
 // It allows the use of external tools like ClosureCompiler, UglifyCSS, etc. for a specific mimetype regular expression.
 func (m *M) AddCmdRegexp(pattern *regexp.Regexp, cmd *exec.Cmd) {
+	m.mutex.Lock()
 	m.pattern = append(m.pattern, patternMinifier{pattern, &cmdMinifier{cmd}})
+	m.mutex.Unlock()
 }
 
 // Match returns the pattern and minifier that gets matched with the mediatype.
 // It returns nil when no matching minifier exists.
 // It has the same matching algorithm as Minify.
 func (m *M) Match(mediatype string) (string, map[string]string, MinifierFunc) {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+
 	mimetype, params := parse.Mediatype([]byte(mediatype))
 	if minifier, ok := m.literal[string(mimetype)]; ok { // string conversion is optimized away
 		return string(mimetype), params, minifier.Minify
@@ -134,18 +200,18 @@ func (m *M) Minify(mediatype string, w io.Writer, r io.Reader) error {
 // It is a lower level version of Minify and requires the mediatype to be split up into mimetype and parameters.
 // It is mostly used internally by minifiers because it is faster (no need to convert a byte-slice to string and vice versa).
 func (m *M) MinifyMimetype(mimetype []byte, w io.Writer, r io.Reader, params map[string]string) error {
-	err := ErrNotExist
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+
 	if minifier, ok := m.literal[string(mimetype)]; ok { // string conversion is optimized away
-		err = minifier.Minify(m, w, r, params)
-	} else {
-		for _, minifier := range m.pattern {
-			if minifier.pattern.Match(mimetype) {
-				err = minifier.Minify(m, w, r, params)
-				break
-			}
+		return minifier.Minify(m, w, r, params)
+	}
+	for _, minifier := range m.pattern {
+		if minifier.pattern.Match(mimetype) {
+			return minifier.Minify(m, w, r, params)
 		}
 	}
-	return err
+	return ErrNotExist
 }
 
 // Bytes minifies an array of bytes (safe for concurrent use). When an error occurs it return the original array and the error.

@@ -14,6 +14,7 @@ type ITunesFeedExtension struct {
 	Image      string            `json:"image,omitempty"`
 	Complete   string            `json:"complete,omitempty"`
 	NewFeedURL string            `json:"newFeedUrl,omitempty"`
+	Type       string            `json:"type,omitempty"`
 }
 
 // ITunesItemExtension is a set of extension
@@ -28,7 +29,10 @@ type ITunesItemExtension struct {
 	Summary           string `json:"summary,omitempty"`
 	Image             string `json:"image,omitempty"`
 	IsClosedCaptioned string `json:"isClosedCaptioned,omitempty"`
+	Episode           string `json:"episode,omitempty"`
+	Season            string `json:"season,omitempty"`
 	Order             string `json:"order,omitempty"`
+	EpisodeType       string `json:"episodeType,omitempty"`
 }
 
 // ITunesCategory is a category element for itunes feeds.
@@ -58,6 +62,7 @@ func NewITunesFeedExtension(extensions map[string][]Extension) *ITunesFeedExtens
 	feed.NewFeedURL = parseTextExtension("new-feed-url", extensions)
 	feed.Categories = parseCategories(extensions)
 	feed.Owner = parseOwner(extensions)
+	feed.Type = parseTextExtension("type", extensions)
 	return feed
 }
 
@@ -71,9 +76,13 @@ func NewITunesItemExtension(extensions map[string][]Extension) *ITunesItemExtens
 	entry.Explicit = parseTextExtension("explicit", extensions)
 	entry.Subtitle = parseTextExtension("subtitle", extensions)
 	entry.Summary = parseTextExtension("summary", extensions)
+	entry.Keywords = parseTextExtension("keywords", extensions)
 	entry.Image = parseImage(extensions)
 	entry.IsClosedCaptioned = parseTextExtension("isClosedCaptioned", extensions)
+	entry.Episode = parseTextExtension("episode", extensions)
+	entry.Season = parseTextExtension("season", extensions)
 	entry.Order = parseTextExtension("order", extensions)
+	entry.EpisodeType = parseTextExtension("episodeType", extensions)
 	return entry
 }
 

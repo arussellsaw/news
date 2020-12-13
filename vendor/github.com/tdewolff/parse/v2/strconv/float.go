@@ -1,6 +1,8 @@
-package strconv // import "github.com/tdewolff/parse/strconv"
+package strconv
 
-import "math"
+import (
+	"math"
+)
 
 var float64pow10 = []float64{
 	1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9,
@@ -8,7 +10,7 @@ var float64pow10 = []float64{
 	1e20, 1e21, 1e22,
 }
 
-// Float parses a byte-slice and returns the float it represents.
+// ParseFloat parses a byte-slice and returns the float it represents.
 // If an invalid character is encountered, it will stop there.
 func ParseFloat(b []byte) (float64, int) {
 	i := 0
@@ -17,7 +19,7 @@ func ParseFloat(b []byte) (float64, int) {
 		neg = b[i] == '-'
 		i++
 	}
-
+	start := i
 	dot := -1
 	trunk := -1
 	n := uint64(0)
@@ -38,6 +40,9 @@ func ParseFloat(b []byte) (float64, int) {
 			break
 		}
 	}
+	if i == start || i == start+1 && dot == start {
+		return 0.0, 0
+	}
 
 	f := float64(n)
 	if neg {
@@ -55,10 +60,13 @@ func ParseFloat(b []byte) (float64, int) {
 	}
 	expExp := int64(0)
 	if i < len(b) && (b[i] == 'e' || b[i] == 'E') {
+		startExp := i
 		i++
 		if e, expLen := ParseInt(b[i:]); expLen > 0 {
 			expExp = e
 			i += expLen
+		} else {
+			i = startExp
 		}
 	}
 	exp := expExp - mantExp
@@ -83,8 +91,7 @@ func ParseFloat(b []byte) (float64, int) {
 	return f * math.Pow10(int(expExp)), i
 }
 
-const log2 = 0.301029995
-const int64maxlen = 18
+const log2 = 0.3010299956639812
 
 func float64exp(f float64) int {
 	exp2 := 0
@@ -100,10 +107,9 @@ func float64exp(f float64) int {
 	return int(exp10)
 }
 
+// AppendFloat appends a float to `b` with precision `prec`. It returns the new slice and whether successful or not. Precision is the number of decimals to display, thus prec + 1 == number of significant digits.
 func AppendFloat(b []byte, f float64, prec int) ([]byte, bool) {
 	if math.IsNaN(f) || math.IsInf(f, 0) {
-		return b, false
-	} else if prec >= int64maxlen {
 		return b, false
 	}
 
@@ -112,8 +118,8 @@ func AppendFloat(b []byte, f float64, prec int) ([]byte, bool) {
 		f = -f
 		neg = true
 	}
-	if prec == -1 {
-		prec = int64maxlen - 1
+	if prec < 0 || 17 < prec {
+		prec = 17 // maximum number of significant digits in double
 	}
 	prec -= float64exp(f) // number of digits in front of the dot
 	f *= math.Pow10(prec)

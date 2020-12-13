@@ -1,20 +1,22 @@
-# Minify <a name="minify"></a> [![Build Status](https://travis-ci.org/tdewolff/minify.svg?branch=master)](https://travis-ci.org/tdewolff/minify) [![GoDoc](http://godoc.org/github.com/tdewolff/minify?status.svg)](http://godoc.org/github.com/tdewolff/minify) [![Coverage Status](https://coveralls.io/repos/github/tdewolff/minify/badge.svg?branch=master)](https://coveralls.io/github/tdewolff/minify?branch=master) [![Join the chat at https://gitter.im/tdewolff/minify](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/tdewolff/minify?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
-***BE AWARE: YOU NEED GO VERSION 1.9.7+, 1.10.3+, 1.11.X to run the latest release, otherwise use minify@v2.3.6 and parse@v2.3.4***
-
----
+# Minify <a name="minify"></a> [![API reference](https://img.shields.io/badge/godoc-reference-5272B4)](https://pkg.go.dev/github.com/tdewolff/minify/v2?tab=doc) [![Go Report Card](https://goreportcard.com/badge/github.com/tdewolff/minify)](https://goreportcard.com/report/github.com/tdewolff/minify) [![Coverage Status](https://coveralls.io/repos/github/tdewolff/minify/badge.svg?branch=master)](https://coveralls.io/github/tdewolff/minify?branch=master) [![Donate](https://img.shields.io/badge/patreon-donate-DFB317)](https://www.patreon.com/tdewolff)
 
 **[Online demo](https://go.tacodewolff.nl/minify) if you need to minify files *now*.**
 
-**[Command line tool](https://github.com/tdewolff/minify/tree/master/cmd/minify) that minifies concurrently and supports watching file changes.**
+**[Command line tool](https://github.com/tdewolff/minify/tree/master/cmd/minify) that minifies concurrently and watches file changes.**
 
-**[All releases](https://github.com/tdewolff/minify/releases) for various platforms.**
+**[Releases](https://github.com/tdewolff/minify/releases) of CLI for various platforms.** See [CLI](https://github.com/tdewolff/minify/tree/master/cmd/minify) for more installation instructions.
 
 ---
+
+*Did you know that the shortest valid piece of HTML5 is `<!doctype html><title>x</title>`? See for yourself at the [W3C Validator](http://validator.w3.org/)!*
 
 Minify is a minifier package written in [Go][1]. It provides HTML5, CSS3, JS, JSON, SVG and XML minifiers and an interface to implement any other minifier. Minification is the process of removing bytes from a file (such as whitespace) without changing its output and therefore shrinking its size and speeding up transmission over the internet and possibly parsing. The implemented minifiers are designed for high performance.
 
 The core functionality associates mimetypes with minification functions, allowing embedded resources (like CSS or JS within HTML files) to be minified as well. Users can add new implementations that are triggered based on a mimetype (or pattern), or redirect to an external command (like ClosureCompiler, UglifyCSS, ...).
+
+### Sponsors
+
+There are no sponsors yet. Please see https://www.patreon.com/tdewolff for ways to contribute, otherwise please contact me directly!
 
 #### Table of Contents
 
@@ -28,6 +30,9 @@ The core functionality associates mimetypes with minification functions, allowin
 		- [Whitespace removal](#whitespace-removal)
 	- [CSS](#css)
 	- [JS](#js)
+		- [Comparison with other tools](#comparison-with-other-tools)
+            - [Compression ratio (lower is better)](#compression-ratio-lower-is-better)
+            - [Time (lower is better)](#time-lower-is-better)
 	- [JSON](#json)
 	- [SVG](#svg)
 	- [XML](#xml)
@@ -43,42 +48,31 @@ The core functionality associates mimetypes with minification functions, allowin
 		- [Mediatypes](#mediatypes)
 	- [Examples](#examples)
 		- [Common minifiers](#common-minifiers)
+		- [External minifiers](#external-minifiers)
+            - [Closure Compiler](#closure-compiler)
+            - [UglifyJS](#uglifyjs)
+            - [esbuild](#esbuild)
 		- [Custom minifier](#custom-minifier-example)
 		- [ResponseWriter](#responsewriter)
 		- [Templates](#templates)
 	- [License](#license)
 
-### Status
-
-* CSS: **fully implemented**
-* HTML: **fully implemented**
-* JS: improved JSmin implementation
-* JSON: **fully implemented**
-* SVG: partially implemented; in development
-* XML: **fully implemented**
-
 ### Roadmap
 
-- [ ] General speed-up of all minifiers (use ASM for whitespace funcs)
-- [ ] Improve JS minifiers by shortening variables and proper semicolon omission
+- [ ] Use ASM/SSE to further speed-up core parts of the parsers/minifiers
+- [x] Improve JS minifiers by shortening variables and proper semicolon omission
 - [ ] Speed-up SVG minifier, it is very slow
 - [x] Proper parser error reporting and line number + column information
 - [ ] Generation of source maps (uncertain, might slow down parsers too much if it cannot run separately nicely)
-- [ ] Look into compression of images, fonts and other web resources (into package `compress`)?
 - [ ] Create a cmd to pack webfiles (much like webpack), ie. merging CSS and JS files, inlining small external files, minification and gzipping. This would work on HTML files.
-- [ ] Create a package to format files, much like `gofmt` for Go files?
 
 ## Prologue
-Minifiers or bindings to minifiers exist in almost all programming languages. Some implementations are merely using several regular-expressions to trim whitespace and comments (even though regex for parsing HTML/XML is ill-advised, for a good read see [Regular Expressions: Now You Have Two Problems](http://blog.codinghorror.com/regular-expressions-now-you-have-two-problems/)). Some implementations are much more profound, such as the [YUI Compressor](http://yui.github.io/yuicompressor/) and [Google Closure Compiler](https://github.com/google/closure-compiler) for JS. As most existing implementations either use JavaScript, use regexes, and don't focus on performance, they are pretty slow.
+Minifiers or bindings to minifiers exist in almost all programming languages. Some implementations are merely using several regular expressions to trim whitespace and comments (even though regex for parsing HTML/XML is ill-advised, for a good read see [Regular Expressions: Now You Have Two Problems](http://blog.codinghorror.com/regular-expressions-now-you-have-two-problems/)). Some implementations are much more profound, such as the [YUI Compressor](http://yui.github.io/yuicompressor/) and [Google Closure Compiler](https://github.com/google/closure-compiler) for JS. As most existing implementations either use JavaScript, use regexes, and don't focus on performance, they are pretty slow.
 
 This minifier proves to be that fast and extensive minifier that can handle HTML and any other filetype it may contain (CSS, JS, ...). It is usually orders of magnitude faster than existing minifiers.
 
 ## Installation
-Run the following command
-
-	go get -u github.com/tdewolff/minify/v2
-
-or add the following imports and run the project with `go get`
+With modules enabled (`GO111MODULES=auto` or `GO111MODULES=on`), add the following imports and run the project with `go get`
 ``` go
 import (
 	"github.com/tdewolff/minify/v2"
@@ -91,65 +85,73 @@ import (
 )
 ```
 
+See [CLI tool](https://github.com/tdewolff/minify/tree/master/cmd/minify) for installation instructions of the binary.
+
 ## API stability
 There is no guarantee for absolute stability, but I take issues and bugs seriously and don't take API changes lightly. The library will be maintained in a compatible way unless vital bugs prevent me from doing so. There has been one API change after v1 which added options support and I took the opportunity to push through some more API clean up as well. There are no plans whatsoever for future API changes.
 
 ## Testing
-For all subpackages and the imported `parse` and `buffer` packages, test coverage of 100% is pursued. Besides full coverage, the minifiers are [fuzz tested](https://github.com/tdewolff/fuzz) using [github.com/dvyukov/go-fuzz](http://www.github.com/dvyukov/go-fuzz), see [the wiki](https://github.com/tdewolff/minify/wiki) for the most important bugs found by fuzz testing. Furthermore am I working on adding visual testing to ensure that minification doesn't change anything visually. By using the WebKit browser to render the original and minified pages we can check whether any pixel is different.
-
-These tests ensure that everything works as intended, the code does not crash (whatever the input) and that it doesn't change the final result visually. If you still encounter a bug, please report [here](https://github.com/tdewolff/minify/issues)!
+For all subpackages and the imported `parse` package, test coverage of 100% is pursued. Besides full coverage, the minifiers are [fuzz tested](https://github.com/tdewolff/fuzz) using [github.com/dvyukov/go-fuzz](http://www.github.com/dvyukov/go-fuzz), see [the wiki](https://github.com/tdewolff/minify/wiki) for the most important bugs found by fuzz testing. These tests ensure that everything works as intended and that the code does not crash (whatever the input). If you still encounter a bug, please file a [bug report](https://github.com/tdewolff/minify/issues)!
 
 ## Performance
-The benchmarks directory contains a number of standardized samples used to compare performance between changes. To give an indication of the speed of this library, I've ran the tests on my Thinkpad T460 (i5-6300U quad-core 2.4GHz running Arch Linux) using Go 1.9.2.
+The benchmarks directory contains a number of standardized samples used to compare performance between changes. To give an indication of the speed of this library, I've ran the tests on my Thinkpad T460 (i5-6300U quad-core 2.4GHz running Arch Linux) using Go 1.15.
 
 ```
 name                              time/op
-CSS/sample_bootstrap.css-4          2.26ms ± 0%
-CSS/sample_gumby.css-4              2.92ms ± 1%
-HTML/sample_amazon.html-4           2.33ms ± 2%
-HTML/sample_bbc.html-4              1.02ms ± 1%
-HTML/sample_blogpost.html-4          171µs ± 2%
-HTML/sample_es6.html-4              14.5ms ± 0%
-HTML/sample_stackoverflow.html-4    2.41ms ± 1%
-HTML/sample_wikipedia.html-4        4.76ms ± 0%
-JS/sample_ace.js-4                  7.41ms ± 0%
-JS/sample_dot.js-4                  63.7µs ± 0%
-JS/sample_jquery.js-4               2.99ms ± 0%
-JS/sample_jqueryui.js-4             5.92ms ± 2%
-JS/sample_moment.js-4               1.09ms ± 1%
-JSON/sample_large.json-4            2.95ms ± 0%
-JSON/sample_testsuite.json-4        1.51ms ± 1%
-JSON/sample_twitter.json-4          6.75µs ± 1%
-SVG/sample_arctic.svg-4             62.3ms ± 1%
-SVG/sample_gopher.svg-4              218µs ± 0%
-SVG/sample_usa.svg-4                33.1ms ± 3%
-XML/sample_books.xml-4              36.2µs ± 0%
-XML/sample_catalog.xml-4            14.9µs ± 0%
-XML/sample_omg.xml-4                6.31ms ± 1%
+CSS/sample_bootstrap.css-4          2.70ms ± 0%
+CSS/sample_gumby.css-4              3.57ms ± 0%
+CSS/sample_fontawesome.css-4         767µs ± 0%
+CSS/sample_normalize.css-4          85.5µs ± 0%
+HTML/sample_amazon.html-4           15.2ms ± 0%
+HTML/sample_bbc.html-4              3.90ms ± 0%
+HTML/sample_blogpost.html-4          420µs ± 0%
+HTML/sample_es6.html-4              15.6ms ± 0%
+HTML/sample_stackoverflow.html-4    3.73ms ± 0%
+HTML/sample_wikipedia.html-4        6.60ms ± 0%
+JS/sample_ace.js-4                  28.7ms ± 0%
+JS/sample_dot.js-4                   357µs ± 0%
+JS/sample_jquery.js-4               10.0ms ± 0%
+JS/sample_jqueryui.js-4             20.4ms ± 0%
+JS/sample_moment.js-4               3.47ms ± 0%
+JSON/sample_large.json-4            3.25ms ± 0%
+JSON/sample_testsuite.json-4        1.74ms ± 0%
+JSON/sample_twitter.json-4          24.2µs ± 0%
+SVG/sample_arctic.svg-4             34.7ms ± 0%
+SVG/sample_gopher.svg-4              307µs ± 0%
+SVG/sample_usa.svg-4                57.4ms ± 0%
+SVG/sample_car.svg-4                18.0ms ± 0%
+SVG/sample_tiger.svg-4              5.61ms ± 0%
+XML/sample_books.xml-4              54.7µs ± 0%
+XML/sample_catalog.xml-4            33.0µs ± 0%
+XML/sample_omg.xml-4                7.17ms ± 0%
 
 name                              speed
-CSS/sample_bootstrap.css-4        60.8MB/s ± 0%
-CSS/sample_gumby.css-4            63.9MB/s ± 1%
-HTML/sample_amazon.html-4          203MB/s ± 2%
-HTML/sample_bbc.html-4             113MB/s ± 1%
-HTML/sample_blogpost.html-4        123MB/s ± 2%
-HTML/sample_es6.html-4            70.7MB/s ± 0%
-HTML/sample_stackoverflow.html-4  85.2MB/s ± 1%
-HTML/sample_wikipedia.html-4      93.6MB/s ± 0%
-JS/sample_ace.js-4                86.9MB/s ± 0%
-JS/sample_dot.js-4                81.0MB/s ± 0%
-JS/sample_jquery.js-4             82.8MB/s ± 0%
-JS/sample_jqueryui.js-4           79.3MB/s ± 2%
-JS/sample_moment.js-4             91.2MB/s ± 1%
-JSON/sample_large.json-4           258MB/s ± 0%
-JSON/sample_testsuite.json-4       457MB/s ± 1%
-JSON/sample_twitter.json-4         226MB/s ± 1%
-SVG/sample_arctic.svg-4           23.6MB/s ± 1%
-SVG/sample_gopher.svg-4           26.7MB/s ± 0%
-SVG/sample_usa.svg-4              30.9MB/s ± 3%
-XML/sample_books.xml-4             122MB/s ± 0%
-XML/sample_catalog.xml-4           130MB/s ± 0%
-XML/sample_omg.xml-4               180MB/s ± 1%
+CSS/sample_bootstrap.css-4        50.7MB/s ± 0%
+CSS/sample_gumby.css-4            52.1MB/s ± 0%
+CSS/sample_fontawesome.css-4      61.2MB/s ± 0%
+CSS/sample_normalize.css-4        70.8MB/s ± 0%
+HTML/sample_amazon.html-4         31.1MB/s ± 0%
+HTML/sample_bbc.html-4            29.5MB/s ± 0%
+HTML/sample_blogpost.html-4       49.8MB/s ± 0%
+HTML/sample_es6.html-4            65.6MB/s ± 0%
+HTML/sample_stackoverflow.html-4  55.0MB/s ± 0%
+HTML/sample_wikipedia.html-4      67.5MB/s ± 0%
+JS/sample_ace.js-4                22.4MB/s ± 0%
+JS/sample_dot.js-4                14.5MB/s ± 0%
+JS/sample_jquery.js-4             24.8MB/s ± 0%
+JS/sample_jqueryui.js-4           23.0MB/s ± 0%
+JS/sample_moment.js-4             28.6MB/s ± 0%
+JSON/sample_large.json-4           234MB/s ± 0%
+JSON/sample_testsuite.json-4       394MB/s ± 0%
+JSON/sample_twitter.json-4        63.0MB/s ± 0%
+SVG/sample_arctic.svg-4           42.4MB/s ± 0%
+SVG/sample_gopher.svg-4           19.0MB/s ± 0%
+SVG/sample_usa.svg-4              17.8MB/s ± 0%
+SVG/sample_car.svg-4              29.3MB/s ± 0%
+SVG/sample_tiger.svg-4            12.2MB/s ± 0%
+XML/sample_books.xml-4            81.0MB/s ± 0%
+XML/sample_catalog.xml-4          58.6MB/s ± 0%
+XML/sample_omg.xml-4               159MB/s ± 0%
 ```
 
 ## HTML
@@ -175,6 +177,7 @@ Options:
 - `KeepDefaultAttrVals` preserve default attribute values such as `<script type="application/javascript">`
 - `KeepDocumentTags` preserve `html`, `head` and `body` tags
 - `KeepEndTags` preserve all end tags
+- `KeepQuotes` preserve quotes around attribute values
 - `KeepWhitespace` preserve whitespace between inline tags but still collapse multiple whitespace characters into one
 
 After recent benchmarking and profiling it became really fast and minifies pages in the 10ms range, making it viable for on-the-fly minification.
@@ -225,24 +228,70 @@ There are a couple of comparison tables online, such as [CSS Minifier Comparison
 
 Options:
 
-- `Decimals` number of decimals to preserve for numbers, `-1` means no trimming
 - `KeepCSS2` prohibits using CSS3 syntax (such as exponents in numbers, or `rgba(` &#8594; `rgb(`), might be incomplete
+- `Precision` number of significant digits to preserve for numbers, `0` means no trimming
 
 ## JS
 
-The JS minifier is pretty basic. It removes comments, whitespace and line breaks whenever it can. It employs all the rules that [JSMin](http://www.crockford.com/javascript/jsmin.html) does too, but has additional improvements. For example the prefix-postfix bug is fixed.
+The JS minifier typically shaves off about 35% -- 65% of filesize depening on the file, which is a compression close to many other minifiers. Common speeds of PHP and JS implementations are about 100-300kB/s (see [Uglify2](http://lisperator.net/uglifyjs/), [Adventures in PHP web asset minimization](https://www.happyassassin.net/2014/12/29/adventures-in-php-web-asset-minimization/)). This implementation is orders of magnitude faster at around ~25MB/s.
 
-Common speeds of PHP and JS implementations are about 100-300kB/s (see [Uglify2](http://lisperator.net/uglifyjs/), [Adventures in PHP web asset minimization](https://www.happyassassin.net/2014/12/29/adventures-in-php-web-asset-minimization/)). This implementation or orders of magnitude faster, around ~80MB/s.
+The following features are implemented:
 
-TODO:
-- shorten local variables / function parameters names
-- precise semicolon and newline omission
+- remove superfluous whitespace
+- remove superfluous semicolons
+- shorten `true`, `false`, and `undefined` to `!0`, `!1` and `void 0`
+- rename variables and functions to shorter names (not in global scope)
+- move `var` declarations to the top of the global/function scope (if more than one)
+- collapse if/else statements to expressions
+- minify conditional expressions to simpler ones
+- merge sequential expression statements to one, including into `return` and `throw`
+- remove superfluous grouping in expressions
+- shorten or remove string escapes
+- convert object key or index expression from string to identifier or decimal
+- merge concatenated strings
+- rewrite numbers (binary, octal, decimal, hexadecimal) to shorter representations
+
+### Comparison with other tools
+
+Performance is measured with `time [command]` ran 10 times and selecting the fastest one, on a Thinkpad T460 (i5-6300U quad-core 2.4GHz running Arch Linux) using Go 1.15.
+
+- [minify](https://github.com/tdewolff/minify): `minify -o script.min.js script.js`
+- [esbuild](https://github.com/evanw/esbuild): `esbuild --minify --outfile=script.min.js script.js`
+- [terser](https://github.com/terser/terser): `terser script.js --compress --mangle -o script.min.js`
+- [UglifyJS](https://github.com/Skalman/UglifyJS-online): `uglifyjs --compress --mangle -o script.min.js script.js`
+- [Closure Compiler](https://github.com/google/closure-compiler): `closure-compiler -O SIMPLE --js script.js --js_output_file script.min.js --language_in ECMASCRIPT_NEXT -W QUIET --jscomp_off=checkVars` optimization level `SIMPLE` instead of `ADVANCED` to make similar assumptions as do the other tools (do not rename/assume anything of global level variables)
+
+#### Compression ratio (lower is better)
+All tools give very similar results, although UglifyJS compresses slightly better.
+
+| Tool | ace.js | dot.js | jquery.js | jqueryui.js | moment.js |
+| --- | --- | --- | --- | --- | --- |
+| **minify** | 53.7% | 64.8% | 34.2% | 51.3% | 34.8% |
+| esbuild | 53.8% | 66.3% | 34.4% | 53.1% | 34.8% |
+| terser | 53.2% | 65.2% | 34.2% | 51.8% | 34.7% |
+| UglifyJS | 53.1% | 64.7% | 33.8% | 50.7% | 34.2% |
+| Closure Compiler | 53.4% | 64.0% | 35.7% | 53.6% | 34.3% |
+
+#### Time (lower is better)
+Most tools are extremely slow, with `minify` and `esbuild` being orders of magnitudes faster.
+
+| Tool | ace.js | dot.js | jquery.js | jqueryui.js | moment.js |
+| --- | --- | --- | --- | --- | --- |
+| **minify** | 49ms | 5ms | 22ms | 35ms | 13ms |
+| esbuild | 64ms | 9ms | 31ms | 51ms | 17ms |
+| terser | 2900s | 180ms | 1400ms | 2200ms | 730ms |
+| UglifyJS | 3900ms | 210ms | 2000ms | 3100ms | 910ms |
+| Closure Compiler | 6100ms | 2500ms | 4400ms | 5300ms | 3500ms |
 
 ## JSON
 
 Minification typically shaves off about 15% of filesize for common indented JSON such as generated by [JSON Generator](http://www.json-generator.com/).
 
-The JSON minifier only removes whitespace, which is the only thing that can be left out.
+The JSON minifier only removes whitespace, which is the only thing that can be left out, and minifies numbers (`1000` => `1e3`).
+
+Options:
+
+- `Precision` number of significant digits to preserve for numbers, `0` means no trimming
 
 ## SVG
 
@@ -257,7 +306,6 @@ The SVG minifier uses these minifications:
 - minify colors
 - shorten lengths and numbers and remove default `px` unit
 - shorten `path` data
-- convert `rect`, `line`, `polygon`, `polyline` to `path`
 - use relative or absolute positions in path data whichever is shorter
 
 TODO:
@@ -266,7 +314,7 @@ TODO:
 
 Options:
 
-- `Decimals` number of decimals to preserve for numbers, `-1` means no trimming
+- `Precision` number of significant digits to preserve for numbers, `0` means no trimming
 
 ## XML
 
@@ -432,13 +480,37 @@ func main() {
 	m.AddFuncRegexp(regexp.MustCompile("[/+]json$"), json.Minify)
 	m.AddFuncRegexp(regexp.MustCompile("[/+]xml$"), xml.Minify)
 
-	// Or use the following for better minification of JS but lower speed:
-	// m.AddCmdRegexp(regexp.MustCompile("^(application|text)/(x-)?(java|ecma)script$"), exec.Command("java", "-jar", "build/compiler.jar"))
-
 	if err := m.Minify("text/html", os.Stdout, os.Stdin); err != nil {
 		panic(err)
 	}
 }
+```
+
+### External minifiers
+Below are some examples of using common external minifiers.
+
+#### Closure Compiler
+See [Closure Compiler Application](https://developers.google.com/closure/compiler/docs/gettingstarted_app). Not tested.
+
+``` go
+m.AddCmdRegexp(regexp.MustCompile("^(application|text)/(x-)?(java|ecma)script$"),
+    exec.Command("java", "-jar", "build/compiler.jar"))
+```
+
+### UglifyJS
+See [UglifyJS](https://github.com/mishoo/UglifyJS2).
+
+``` go
+m.AddCmdRegexp(regexp.MustCompile("^(application|text)/(x-)?(java|ecma)script$"),
+    exec.Command("uglifyjs"))
+```
+
+### esbuild
+See [esbuild](https://github.com/evanw/esbuild).
+
+``` go
+m.AddCmdRegexp(regexp.MustCompile("^(application|text)/(x-)?(java|ecma)script$"),
+    exec.Command("esbuild", "$in.js", "--minify", "--outfile=$out.js"))
 ```
 
 ### <a name="custom-minifier-example"></a> Custom minifier
@@ -588,7 +660,7 @@ func compileTemplates(filenames ...string) (*template.Template, error) {
 Example usage:
 
 ``` go
-templates := template.MustCompile(compileTemplates("view.html", "home.html"))
+templates := template.Must(compileTemplates("view.html", "home.html"))
 ```
 
 ## License

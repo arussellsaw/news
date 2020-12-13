@@ -98,12 +98,6 @@ func LayoutArticles(aa []Article) []Article {
 	bySize := make([][]Article, 6)
 	for _, a := range aa {
 		s := 0
-		for _, c := range a.Content {
-			if c.Type != "text" {
-				continue
-			}
-			s += len(c.Value)
-		}
 		switch {
 		case s < 200:
 			bySize[0] = append(bySize[0], a)

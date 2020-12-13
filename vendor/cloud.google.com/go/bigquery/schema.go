@@ -64,6 +64,10 @@ type FieldSchema struct {
 	// The field data type.  If Type is Record, then this field contains a nested schema,
 	// which is described by Schema.
 	Type FieldType
+
+	// Annotations for enforcing column-level security constraints.
+	PolicyTags *PolicyTagList
+
 	// Describes the nested schema if Type is set to Record.
 	Schema Schema
 }
@@ -73,6 +77,7 @@ func (fs *FieldSchema) toBQ() *bq.TableFieldSchema {
 		Description: fs.Description,
 		Name:        fs.Name,
 		Type:        string(fs.Type),
+		PolicyTags:  fs.PolicyTags.toBQ(),
 	}
 
 	if fs.Repeated {
@@ -86,6 +91,30 @@ func (fs *FieldSchema) toBQ() *bq.TableFieldSchema {
 	}
 
 	return tfs
+}
+
+// PolicyTagList represents the annotations on a schema column for enforcing column-level security.
+// For more information, see https://cloud.google.com/bigquery/docs/column-level-security-intro
+type PolicyTagList struct {
+	Names []string
+}
+
+func (ptl *PolicyTagList) toBQ() *bq.TableFieldSchemaPolicyTags {
+	if ptl == nil {
+		return nil
+	}
+	return &bq.TableFieldSchemaPolicyTags{
+		Names: ptl.Names,
+	}
+}
+
+func bqToPolicyTagList(pt *bq.TableFieldSchemaPolicyTags) *PolicyTagList {
+	if pt == nil {
+		return nil
+	}
+	return &PolicyTagList{
+		Names: pt.Names,
+	}
 }
 
 func (s Schema) toBQ() *bq.TableSchema {
@@ -103,6 +132,7 @@ func bqToFieldSchema(tfs *bq.TableFieldSchema) *FieldSchema {
 		Repeated:    tfs.Mode == "REPEATED",
 		Required:    tfs.Mode == "REQUIRED",
 		Type:        FieldType(tfs.Type),
+		PolicyTags:  bqToPolicyTagList(tfs.PolicyTags),
 	}
 
 	for _, f := range tfs.Fields {
@@ -170,6 +200,13 @@ var (
 		NumericFieldType:   true,
 		GeographyFieldType: true,
 	}
+	// The API will accept alias names for the types based on the Standard SQL type names.
+	fieldAliases = map[FieldType]FieldType{
+		"BOOL":    BooleanFieldType,
+		"FLOAT64": FloatFieldType,
+		"INT64":   IntegerFieldType,
+		"STRUCT":  RecordFieldType,
+	}
 )
 
 var typeOfByteSlice = reflect.TypeOf([]byte{})
@@ -213,7 +250,7 @@ var typeOfByteSlice = reflect.TypeOf([]byte{})
 //   DATE        NullDate
 //   TIME        NullTime
 //   DATETIME    NullDateTime
-//   GEOGRAPHY	 NullGeography
+//   GEOGRAPHY   NullGeography
 //
 // For a nullable BYTES field, use the type []byte and tag the field "nullable" (see below).
 // For a nullable NUMERIC field, use the type *big.Rat and tag the field "nullable".
@@ -461,6 +498,18 @@ type bigQueryJSONField struct {
 	Type        string              `json:"type"`
 }
 
+// validateKnownType ensures a type is known (or alias of a known type).
+func validateKnownType(in FieldType) (FieldType, error) {
+	if _, ok := fieldTypes[in]; !ok {
+		// not a defined type, check aliases.
+		if resolved, ok := fieldAliases[in]; ok {
+			return resolved, nil
+		}
+		return "", fmt.Errorf("unknown field type (%v)", in)
+	}
+	return in, nil
+}
+
 // convertSchemaFromJSON generates a Schema:
 func convertSchemaFromJSON(fs []bigQueryJSONField) (Schema, error) {
 	convertedSchema := Schema{}
@@ -480,11 +529,11 @@ func convertSchemaFromJSON(fs []bigQueryJSONField) (Schema, error) {
 		}
 
 		// Check that the field-type (string) maps to a known FieldType:
-		if _, ok := fieldTypes[FieldType(f.Type)]; !ok {
-			return nil, fmt.Errorf("unknown field type (%v)", f.Type)
+		validType, err := validateKnownType(FieldType(f.Type))
+		if err != nil {
+			return nil, err
 		}
-		convertedFieldSchema.Type = FieldType(f.Type)
-
+		convertedFieldSchema.Type = validType
 		convertedSchema = append(convertedSchema, convertedFieldSchema)
 	}
 	return convertedSchema, nil

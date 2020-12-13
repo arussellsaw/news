@@ -2,6 +2,7 @@ package dao
 
 import (
 	"context"
+	"github.com/monzo/slog"
 	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"
 	"sync"
@@ -40,6 +41,10 @@ type storedEdition struct {
 	Articles   []string
 	Categories []string
 	Metadata   map[string]string
+}
+
+func Client() *firestore.Client {
+	return client
 }
 
 func GetEditionForTime(ctx context.Context, t time.Time, allowRecent bool) (*domain.Edition, error) {
@@ -325,14 +330,32 @@ func GetAllSources(ctx context.Context) ([]domain.Source, error) {
 }
 
 func GetArticlesForOwner(ctx context.Context, ownerID string, start, end time.Time) ([]domain.Article, []domain.Source, error) {
-	sources, err := GetSources(ctx, ownerID)
-	if err != nil {
-		return nil, nil, err
+	var (
+		sources []domain.Source
+		err     error
+	)
+	if ownerID != "" {
+		sources, err = GetSources(ctx, ownerID)
+		if err != nil {
+			return nil, nil, err
+		}
+	} else {
+		sources = domain.GetSources()
 	}
 	g := errgroup.Group{}
-	articles := make(chan domain.Article, 1024)
+	articles := make(chan domain.Article)
 	for _, s := range sources {
 		s := s
+		if as, ok := c.Get(s.FeedURL); ok {
+			as := as
+			g.Go(func() error {
+				for _, a := range as {
+					articles <- a
+				}
+				return nil
+			})
+			continue
+		}
 		g.Go(func() error {
 			docs, err := client.Collection("articles").
 				Where("Source.FeedURL", "==", s.FeedURL).
@@ -343,14 +366,18 @@ func GetArticlesForOwner(ctx context.Context, ownerID string, start, end time.Ti
 			if err != nil {
 				return err
 			}
+			toCache := []domain.Article{}
 			for _, doc := range docs {
 				a := domain.Article{}
 				err = doc.DataTo(&a)
 				if err != nil {
 					return err
 				}
+				toCache = append(toCache, a)
+				slog.Debug(ctx, "Article loaded: %s %s", a.Title, a.Source.FeedURL)
 				articles <- a
 			}
+			c.Set(s.FeedURL, toCache)
 			return nil
 		})
 	}
@@ -366,4 +393,39 @@ func GetArticlesForOwner(ctx context.Context, ownerID string, start, end time.Ti
 		return nil, nil, err
 	}
 	return out, sources, nil
+}
+
+var c = feedCache{
+	c:   make(map[string][]domain.Article),
+	ttl: 20 * time.Minute,
+}
+
+type feedCache struct {
+	mu sync.RWMutex
+	c  map[string][]domain.Article
+
+	ttl time.Duration
+}
+
+func (c *feedCache) Get(url string) ([]domain.Article, bool) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	as, ok := c.c[url]
+	return as, ok
+}
+
+func (c *feedCache) Set(url string, as []domain.Article) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.c[url] = as
+	go func(url string, ttl time.Duration) {
+		<-time.After(ttl)
+		c.Delete(url)
+	}(url, c.ttl)
+}
+
+func (c *feedCache) Delete(url string) {
+	c.mu.Lock()
+	delete(c.c, url)
+	c.mu.Unlock()
 }

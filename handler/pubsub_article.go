@@ -1,18 +1,24 @@
 package handler
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/arussellsaw/news/dao"
 	"github.com/arussellsaw/news/idgen"
 	"github.com/monzo/slog"
-	"html/template"
+	"github.com/pacedotdev/firesearch-sdk/clients/go/firesearch"
+	"github.com/thatguystone/swan"
+	"golang.org/x/sync/semaphore"
 	"net/http"
-	"net/url"
+	"os/exec"
 	"strings"
 
 	"github.com/arussellsaw/news/domain"
+)
+
+var (
+	s = semaphore.NewWeighted(20)
 )
 
 type ArticleEvent struct {
@@ -49,39 +55,84 @@ func handlePubsubArticle(w http.ResponseWriter, r *http.Request) {
 	slogParams := map[string]string{
 		"url": e.Article.Link,
 	}
-	res, err := c.Get(fmt.Sprintf("https://readability-server.russellsaw.io/?url=%s", url.QueryEscape(e.Article.Link)))
+	err = s.Acquire(ctx, 1)
 	if err != nil {
-		slog.Error(ctx, "Error fetching article: %s", err, slogParams)
+		slog.Error(ctx, "Failed to acquire semaphore: %s", err)
+		return
+	}
+	cmd := exec.Command("node", "./readability-server/index.js", e.Article.Link)
+	buf := &bytes.Buffer{}
+	cmd.Stdout = buf
+	err = cmd.Run()
+	s.Release(1)
+	if err != nil {
+		slog.Error(ctx, "Error fetching article: %s - %s", err, buf.String(), slogParams)
 		return
 	}
 	var article = struct {
 		Body     string `json:"body"`
 		BodyText string `json:"body_text"`
 	}{}
-	err = json.NewDecoder(res.Body).Decode(&article)
+	err = json.NewDecoder(buf).Decode(&article)
 	if err != nil {
 		slog.Error(ctx, "Error fetching article: %s", err, slogParams)
 		return
 	}
 
+	if len(article.Body) > 1024*1024*5 {
+		slog.Warn(ctx, "dropping article, too large: %s", e.Article.Link)
+		return
+	}
+
 	a := domain.Article{
 		ID:          idgen.New("art"),
-		Title:       e.Article.Title,
-		Description: e.Article.Description,
-		Content:     toElements(article.BodyText, "\n"),
-		HTMLContent: template.HTML(article.Body),
+		Title:       removeHTMLTag(e.Article.Title),
+		Description: removeHTMLTag(e.Article.Description),
+		Content:     []domain.Element{{Type: "text", Value: removeHTMLTag(article.BodyText)}},
 		ImageURL:    e.Article.ImageURL,
 		Link:        e.Article.Link,
 		Source:      e.Article.Source,
 		Timestamp:   e.Article.Timestamp,
 		TS:          e.Article.Timestamp.Format("Mon Jan 2 15:04"),
 	}
+	a.SetHTMLContent(article.Body)
+
+	sa, err := swan.FromHTML(a.Link, []byte(article.Body))
+	if err != nil {
+		slog.Error(ctx, "Error parsing article: %s", err, slogParams)
+		return
+	}
+	if sa.Img != nil {
+		a.ImageURL = sa.Img.Src
+	}
+
 	err = dao.SetArticle(ctx, &a)
 	if err != nil {
 		slog.Error(ctx, "Error storing article: %s", err, slogParams)
 		return
 	}
 	slog.Info(ctx, "Stored new article: %s - %s", a.ID, a.Title)
+	_, err = indexService.PutDoc(ctx, firesearch.PutDocRequest{
+		IndexPath: "news/search/articles",
+		Doc: firesearch.Doc{
+			ID: a.ID,
+			SearchFields: []firesearch.SearchField{
+				{
+					Key:   "title",
+					Value: a.Title,
+					Store: true,
+				},
+				{
+					Key:   "content",
+					Value: article.BodyText,
+					Store: true,
+				},
+			},
+		},
+	})
+	if err != nil {
+		slog.Error(ctx, "Error indexing: %s", err)
+	}
 }
 
 func httpError(ctx context.Context, w http.ResponseWriter, msg string, err error) {

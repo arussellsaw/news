@@ -20,13 +20,21 @@ type base struct {
 	ID         string
 	Name       string
 	Title      string
+	Meta       Meta
+}
+
+type Meta struct {
+	Title       string
+	Description string
+	Image       string
+	URL         string
 }
 
 func handleSettings(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	t := template.New("frame.html")
-	t, err := t.ParseFiles("tmpl/frame.html", "tmpl/settings.html")
+	t, err := t.ParseFiles("tmpl/frame.html", "tmpl/meta.html", "tmpl/settings.html")
 	if err != nil {
 		slog.Error(ctx, "Error parsing template: %s", err)
 		http.Error(w, err.Error(), 500)

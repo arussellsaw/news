@@ -6,13 +6,15 @@
                     {{if .ImageURL}}
                         <img style="
                     width:100%;
+                    border-radius: 20px;
                     height: 450px;
-                    object-fit: cover;"
+                    object-fit: cover;
+                    margin-bottom: 1rem;"
                              src="{{.ImageURL}}"
                         />
                     {{end}}
                     <div style="width: 100%; text-align: center; word-wrap: break-spaces">
-                        <p class="is-size-2 has-text-weight-bold" style="text-transform: uppercase; font-weight: 300 !important;">{{.Title}}</p>
+                        <p class="is-size-2 has-text-weight-bold">{{.Title}}</p>
                     </div>
                     <div class="underline"></div>
                 </a>
@@ -20,12 +22,12 @@
             </div>
             <div id="{{.ID}}-text" class="subcol">
                 {{range .Content}}
-                    <p>{{.Value}}<br/></p>
+                    {{.Value}}
                 {{end}}
             </div>
             <a href="/article?id={{.ID}}">(read more)</a>
             <script>
-                trimArticle({{.ID}})
+                //trimArticle({{.ID}})
             </script>
         </div>
     {{end}}
@@ -34,30 +36,32 @@
     {{if .ID}}
         <div id="{{.ID}}" class="article biggest-article">
             <div id="{{.ID}}-link">
-            <a href="/article?id={{.ID}}">
-                {{if .ImageURL}}
-                    <img class="lazy" loading="lazy" style="
+                <a href="/article?id={{.ID}}">
+                    {{if .ImageURL}}
+                        <img class="lazy" loading="lazy" style="
                     width:100%;
                     height: 450px;
+                    border-radius: 20px;
+                    margin-bottom: 1rem;
                     object-fit: cover;"
-                         data-src="{{.ImageURL}}"
-                    />
-                {{end}}
-                <div style="width: 100%; text-align: center; word-wrap: break-spaces">
-                    <p class="is-size-2 has-text-weight-bold" style="text-transform: uppercase; font-weight: 300 !important;">{{.Title}}</p>
-                </div>
-                <div class="underline"></div>
-            </a>
-            <a href="/?src={{.Source.Name}}"><p class="is-size-7 has-text-weight-bold">{{.Source.Name}} - {{.TS}}</p></a>
+                             data-src="{{.ImageURL}}"
+                        />
+                    {{end}}
+                    <div style="width: 100%; text-align: center; word-wrap: break-spaces">
+                        <p class="is-size-2 has-text-weight-bold">{{.Title}}</p>
+                    </div>
+                    <div class="underline"></div>
+                </a>
+                <a href="/?src={{.Source.Name}}"><p class="is-size-7 has-text-weight-bold">{{.Source.Name}} - {{.TS}}</p></a>
             </div>
             <div id="{{.ID}}-text" class="subcol">
                 {{range .Content}}
-                    <p>{{.Value}}<br/></p>
+                    {{.Value}}
                 {{end}}
             </div>
             <a href="/article?id={{.ID}}">(read more)</a>
             <script>
-                trimArticle({{.ID}})
+                //trimArticle({{.ID}})
             </script>
         </div>
     {{end}}
@@ -66,142 +70,146 @@
     {{if .ID}}
         <div id="{{.ID}}" class="article big-article">
             <div id="{{.ID}}-link">
-            <a href="/article?id={{.ID}}">
-                <div class="overline"></div>
-                <div style="width: 100%; text-align: center; word-wrap: break-spaces">
-                    <p class="is-size-2 has-text-weight-bold">{{.Title}}</p>
-                </div>
-                <div class="underline"></div>
-                {{if .ImageURL}}
-                    <img class="lazy" style="
+                <a href="/article?id={{.ID}}">
+                    <div class="overline"></div>
+                    <div style="width: 100%; text-align: center; word-wrap: break-spaces">
+                        <p class="is-size-2 has-text-weight-bold">{{.Title}}</p>
+                    </div>
+                    <div class="underline"></div>
+                    {{if .ImageURL}}
+                        <img class="lazy" style="
                     width:100%;
                     background-size: cover;
                     width:100%;
                     height: 400px;
+                    margin-bottom: 1rem;
+                    border-radius: 20px;
                     object-fit: cover;"
-                         data-src="{{.ImageURL}}"
-                    />
-                {{end}}
-            </a>
-            <a href="/?src={{.Source.Name}}"><p class="is-size-7 has-text-weight-bold">{{.Source.Name}} - {{.TS}}</p></a>
+                             data-src="{{.ImageURL}}"
+                        />
+                    {{end}}
+                </a>
+                <a href="/?src={{.Source.Name}}"><p class="is-size-7 has-text-weight-bold">{{.Source.Name}} - {{.TS}}</p></a>
             </div>
             <div id="{{.ID}}-text" class="subcol">
                 {{range .Content}}
-                    <p>{{.Value}}<br/></p>
+                    {{.Value}}
                 {{end}}
             </div>
             <a href="/article?id={{.ID}}">(read more)</a>
-            <script>
-                trimArticle({{.ID}})
-            </script>
         </div>
     {{end}}
 {{end}}
 
 {{define "article"}}
-{{if .ID}}
-<div id="{{.ID}}" class="article">
-    <div id="{{.ID}}-link">
-        <a href="/article?id={{.ID}}">
-        <div class="overline"></div>
-        <div style="width: 100%; text-align: center; word-wrap: break-spaces">
-            <p class="is-size-4 has-text-weight-bold">{{.Title}}</p>
-        </div>
-        <div class="underline"></div>
-        {{if .ImageURL}}
-            <img class="lazy" style="
+    {{if .ID}}
+        <div id="{{.ID}}" class="article">
+            <div id="{{.ID}}-link">
+                <a href="/article?id={{.ID}}">
+                    <div class="overline"></div>
+                    <div style="width: 100%; text-align: center; word-wrap: break-spaces">
+                        <p class="is-size-4 has-text-weight-bold">{{.Title}}</p>
+                    </div>
+                    <div class="underline"></div>
+                    {{if .ImageURL}}
+                        <img class="lazy" style="
                     width:100%;
                     background-size: cover;
                     height: 150px;
+                    border-radius: 20px;
+                    margin-bottom: 1rem;
                     object-fit: cover;"
-                 data-src="{{.ImageURL}}"
-            />
-        {{end}}
-    </a>
-        <a href="/?src={{.Source.Name}}"><p class="is-size-7 has-text-weight-bold">{{.Source.Name}} - {{.TS}}</p></a>
-    </div>
-    <div id="{{.ID}}-text" class="subcol">
-        {{range .Content}}
-            <p>{{.Value}}<br/></p>
-        {{end}}
-    </div>
-    <a href="/article?id={{.ID}}">(read more)</a>
-    <script>
-        trimArticle({{.ID}})
-    </script>
-</div>
-{{end}}
+                             data-src="{{.ImageURL}}"
+                        />
+                    {{end}}
+                </a>
+                <a href="/?src={{.Source.Name}}"><p class="is-size-7 has-text-weight-bold">{{.Source.Name}} - {{.TS}}</p></a>
+            </div>
+            <div id="{{.ID}}-text" class="subcol">
+                {{range .Content}}
+                    {{.Value}}
+                {{end}}
+            </div>
+            <a href="/article?id={{.ID}}">(read more)</a>
+            <script>
+                //trimArticle({{.ID}})
+            </script>
+        </div>
+    {{end}}
 {{end}}
 
 
 {{define "medium-article"}}
-{{if .ID}}
-    <div id="{{.ID}}" class="article medium-article">
-        <div id="{{.ID}}-link">
-            <a href="/article?id={{.ID}}">
-            <div class="overline"></div>
-            <div style="width: 100%; text-align: center; word-wrap: break-spaces">
-                <p class="is-size-3 has-text-weight-bold">{{.Title}}</p>
-            </div>
-            <div class="underline"></div>
-            {{if .ImageURL}}
-                <img class="lazy" style="
+    {{if .ID}}
+        <div id="{{.ID}}" class="article medium-article">
+            <div id="{{.ID}}-link">
+                <a href="/article?id={{.ID}}">
+                    <div class="overline"></div>
+                    <div style="width: 100%; text-align: center; word-wrap: break-spaces">
+                        <p class="is-size-3 has-text-weight-bold">{{.Title}}</p>
+                    </div>
+                    <div class="underline"></div>
+                    {{if .ImageURL}}
+                        <img class="lazy" style="
                     width:100%;
                     background-size: cover;
                     width:100%;
+                    border-radius: 20px;
                     height:400px;
+                    margin-bottom: 1rem;
                     object-fit: cover;"
-                     data-src="{{.ImageURL}}"
-                />
-            {{end}}
-        </a>
-            <a href="/?src={{.Source.Name}}" ><p class="is-size-7 has-text-weight-bold">{{.Source.Name}} - {{.TS}}</p></a>
+                             data-src="{{.ImageURL}}"
+                        />
+                    {{end}}
+                </a>
+                <a href="/?src={{.Source.Name}}" ><p class="is-size-7 has-text-weight-bold">{{.Source.Name}} - {{.TS}}</p></a>
+            </div>
+            <div id="{{.ID}}-text" class="subcol">
+                {{range .Content}}
+                    {{.Value}}
+                {{end}}
+            </div>
+            <a href="/article?id={{.ID}}" class="read-more">(read more)</a>
+            <script>
+                //trimArticle({{.ID}})
+            </script>
         </div>
-        <div id="{{.ID}}-text" class="subcol">
-            {{range .Content}}
-                <p>{{.Value}}<br/></p>
-            {{end}}
-        </div>
-        <a href="/article?id={{.ID}}" class="read-more">(read more)</a>
-        <script>
-            trimArticle({{.ID}})
-        </script>
-    </div>
-{{end}}
+    {{end}}
 {{end}}
 
 {{define "small-article"}}
-{{if .ID}}
-    <div id="{{.ID}}" class="article small-article">
-        <div id="{{.ID}}-link">
-            <a href="/article?id={{.ID}}">
-            <div style="width: 100%; text-align: center; word-wrap: break-spaces">
-                <p class="has-text-weight-bold">{{.Title}}</p>
-            </div>
-            {{if .ImageURL}}
-                <img class="lazy" style="
+    {{if .ID}}
+        <div id="{{.ID}}" class="article small-article">
+            <div id="{{.ID}}-link">
+                <a href="/article?id={{.ID}}">
+                    <div style="width: 100%; text-align: center; word-wrap: break-spaces">
+                        <p class="has-text-weight-bold">{{.Title}}</p>
+                    </div>
+                    {{if .ImageURL}}
+                        <img class="lazy" style="
                     width:100%;
                     background-size: cover;
                     width:100%;
                     height:auto;
                     max-height: 500px;
-                    image-rendering: pixelated;
+                    margin-bottom: 1rem;
+                    border-radius: 20px;
                     object-fit: cover;"
-                     data-src="{{.ImageURL}}"
-                />
-            {{end}}
-        </a>
-            <a href="/?src={{.Source.Name}}"><p class="is-size-7 has-text-weight-bold source-link">{{.Source.Name}} - {{.TS}}</p></a>
+                             data-src="{{.ImageURL}}"
+                        />
+                    {{end}}
+                </a>
+                <a href="/?src={{.Source.Name}}"><p class="is-size-7 has-text-weight-bold source-link">{{.Source.Name}} - {{.TS}}</p></a>
+            </div>
+            <div id="{{.ID}}-text" class="subcol">
+                {{range .Content}}
+                    {{.Value}}
+                {{end}}
+            </div>
+            <a href="/article?id={{.ID}}" class="read-more">(read more)</a>
+            <script>
+                //trimArticle({{.ID}})
+            </script>
         </div>
-        <div id="{{.ID}}-text" class="subcol">
-            {{range .Content}}
-                <p>{{.Value}}<br/></p>
-            {{end}}
-        </div>
-        <a href="/article?id={{.ID}}" class="read-more">(read more)</a>
-        <script>
-            trimArticle({{.ID}})
-        </script>
-    </div>
-{{end}}
+    {{end}}
 {{end}}

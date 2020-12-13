@@ -25,7 +25,7 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	t := template.New("frame.html")
-	t, err := t.ParseFiles("tmpl/frame.html", "tmpl/login.html")
+	t, err := t.ParseFiles("tmpl/frame.html", "tmpl/meta.html", "tmpl/login.html")
 	if err != nil {
 		slog.Error(ctx, "Error parsing template: %s", err)
 		http.Error(w, err.Error(), 500)

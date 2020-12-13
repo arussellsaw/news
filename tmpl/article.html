@@ -1,27 +1,17 @@
 {{ define "content" }}
-	<div class="article" style="border: none; width: 65%; margin-left: auto; margin-right: auto">
+	<div class="article-page">
 		<a href="{{.Article.Link}}">
 			<div class="overline"></div>
 			<div style="width: 100%; text-align: left; word-wrap: break-spaces">
-				<p class="is-size-2 has-text-weight-bold">{{.Article.Title}}</p>
+				<h2>{{.Article.Title}}</h2>
 			</div>
 			<div class="underline"></div>
-			{{if not .Article.HTMLContent }}
-				<img style="width:100%; height:auto; margin-bottom: 2rem;" src="{{.Article.ImageURL}}"/>
-			{{end}}
 			<p class="is-size-5 has-text-weight-bold">{{.Article.Source.Name}} - {{.Article.TS}}</p>
 		</a>
 		<div style="margin-top: 2rem;">
-			{{if .Article.HTMLContent }}
-				<div class="article-content">
-					{{ .Article.HTMLContent }}
-				</div>
-			{{else}}
-				{{range .Article.Content}}
-					<p style="font-size: 1.3rem;">{{.Value}}</p>
-					<div style="height: 20px"></div>
-				{{end}}
-			{{end}}
+			<div class="article-content">
+				{{ .Article.RawHTML }}
+			</div>
 		</div>
 		{{if .User}}
 		{{if .User.IsAdmin }}

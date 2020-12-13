@@ -27,12 +27,12 @@ func handlePubsubSource(w http.ResponseWriter, r *http.Request) {
 		ctx = r.Context()
 	)
 	if err := json.NewDecoder(r.Body).Decode(&m); err != nil {
-		httpError(ctx, w, "Error decoding event", err)
+		slog.Error(ctx, "Error decoding event: %s", err)
 		return
 	}
 
 	if err := json.Unmarshal(m.Message.Data, &e); err != nil {
-		httpError(ctx, w, "Error decoding feed", err)
+		slog.Error(ctx, "Error decoding feed: %s", err)
 		return
 	}
 
@@ -40,7 +40,7 @@ func handlePubsubSource(w http.ResponseWriter, r *http.Request) {
 	fp := gofeed.NewParser()
 	feed, err := fp.ParseURL(e.Source.FeedURL)
 	if err != nil {
-		httpError(ctx, w, "Error parsing rss feed", err)
+		slog.Error(ctx, "Error parsing feed: %s", err)
 		return
 	}
 

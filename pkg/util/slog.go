@@ -79,7 +79,7 @@ type Entry struct {
 	Severity string `json:"severity,omitempty"`
 	Trace    string `json:"logging.googleapis.com/trace,omitempty"`
 
-	Params map[string]string `json:"params,omitempty"`
+	Params map[string]interface{} `json:"params,omitempty"`
 }
 
 // String renders an entry structure to the JSON format expected by Stackdriver.

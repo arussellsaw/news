@@ -1,6 +1,6 @@
 <html lang="en">
 <head>
-    <title>The Webpage</title>
+    {{template "meta" .Meta}}
 
     <link rel="stylesheet" href="/static/bulma.min.css" type="text/css"/>
     <link rel="stylesheet" href="/static/main.css?cb=20201114" type="text/css"/>
@@ -9,6 +9,8 @@
     <link rel="shortcut icon" href="/static/favicon.png" />
     <link rel="apple-touch-icon" href="/static/favicon.png" />
     <link rel="apple-touch-icon-precomposed" href="/static/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=0.86, maximum-scale=5.0, minimum-scale=0.86">
+    <script async defer data-domain="news.russellsaw.io" src="https://plausible.io/js/plausible.js"></script>
 
     <script>
         (function (global, factory) {
@@ -98,7 +100,7 @@
 
         const font = localStorage.getItem("font-mode")
         if (!localStorage.getItem("font-mode")) {
-            document.documentElement.setAttribute("font-mode", "serif");
+            document.documentElement.setAttribute("font-mode", "sans");
         } else {
             document.documentElement.setAttribute("font-mode", font);
         }
@@ -137,6 +139,9 @@
             if (el == null) {
                 return
             }
+            if (el.classList.contains("trimmed")) {
+                return
+            }
             var id = el.id
             var style = getComputedStyle(el)
             if (style.maxHeight === "none") {
@@ -150,7 +155,26 @@
             height = height - Number(style.marginBottom.slice(0,-2))
             height -= 20
             shave("#"+id+"-text", height)
+            el.classList.add("trimmed")
         }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            var lazyTrim;
+
+            lazyTrim = document.querySelectorAll(".article");
+            var trimObserver = new IntersectionObserver(function(entries, observer) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        trimArticle(entry.target.id)
+                        trimObserver.unobserve(entry.target)
+                    }
+                });
+            });
+
+            lazyTrim.forEach(function(entry) {
+                trimObserver.observe(entry);
+            });
+        })
     </script>
 </head>
 <body>
@@ -170,79 +194,93 @@
         <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
     </symbol>
 </svg>
-<div class="container is-fluid" style="max-width: 1200px;">
+<div class="container is-fluid" style="
+    max-width: 1200px !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;">
     <div class="level" style="align-items: baseline; margin-left: 1rem; margin-right: 1rem; margin-bottom: 1rem">
+        <div class="is-hidden-mobile" style="margin-right: 2rem; width: 100%; display: flex; flex-direction: row; justify-content: space-between; flex-wrap: nowrap">
         {{ range .Categories }}
             <a href="/?cat={{.}}">{{.}}</a>
         {{ end }}
+        </div>
         <div class="level-right" style="margin-top: 1rem;">
-            <button class="style-button" aria-label="Open style menu">
-                Aa
-            </button>
-            <div class="style-config" style="display:none">
-                <div style="display: flex; width: 100%; margin-bottom: 10px; justify-content: space-between;">
-                    <button
-                            class="color-mode__btn"
-                            aria-label="Toggle light mode"
-                    >
-                        <svg onclick="light()">
-                            <title>Light Mode</title>
-                            <use href="#sun"></use>
-                        </svg>
+            <div style="width: 100%; display: flex; flex-direction: row; flex-wrap: nowrap">
+                <button class="style-button" aria-label="Open style menu">
+                    Aa
+                </button>
+                <div class="style-config" style="display:none">
+                    <div style="display: flex; width: 100%; margin-bottom: 10px; justify-content: space-between;">
+                        <button
+                                class="color-mode__btn"
+                                aria-label="Toggle light mode"
+                        >
+                            <svg onclick="light()">
+                                <title>Light Mode</title>
+                                <use href="#sun"></use>
+                            </svg>
+                        </button>
+                        <button
+                                class="color-mode__btn"
+                                aria-label="Toggle dark mode"
+                        >
+                            <svg onclick="dark()">
+                                <title>Dark Mode</title>
+                                <use href="#moon"></use>
+                            </svg>
+                        </button>
+                    </div>
+                    <div style="display: flex; margin-bottom: 10px; align-items: baseline;">
+                        <button class="color-mode__btn" onclick="regular()">
+                            <span class="regular">A</span>
+                        </button>
+                        <button class="color-mode__btn" onclick="big()">
+                            <span class="big">A</span>
+                        </button>
+                    </div>
+                    <button class="color-mode__btn sans" onclick="sans()">
+                        Sans
                     </button>
-                    <button
-                            class="color-mode__btn"
-                            aria-label="Toggle dark mode"
-                    >
-                        <svg onclick="dark()">
-                            <title>Dark Mode</title>
-                            <use href="#moon"></use>
-                        </svg>
+                    <button class="color-mode__btn serif" onclick="serif()">
+                        Serif
                     </button>
                 </div>
-                <div style="display: flex; margin-bottom: 10px; align-items: baseline;">
-                    <button class="color-mode__btn" onclick="regular()">
-                        <span class="regular">A</span>
-                    </button>
-                    <button class="color-mode__btn" onclick="big()">
-                        <span class="big">A</span>
-                    </button>
-                </div>
-                <button class="color-mode__btn sans" onclick="sans()">
-                    Sans
-                </button>
-                <button class="color-mode__btn serif" onclick="serif()">
-                    Serif
-                </button>
+                <script>
+                    var toggleStyle = document.querySelector(".style-button"); // Set up event listeners
+                    toggleStyle.addEventListener("click", ev => {
+                        const e =document.querySelector(".style-config")
+                        console.log(e)
+                        if (e.style.display === 'none') {
+                            e.style.display = 'flex'
+                        } else {
+                            e.style.display = 'none'
+                        }
+                    });
+                </script>
+                {{ if .User }}
+                    <a style="margin-left: 2rem;" href="/settings">{{.User.Name}}</a>
+                {{ else }}
+                    <a  style="margin-left: 2rem;" href="/login">log in</a>
+                {{ end }}
             </div>
-            <script>
-                var toggleStyle = document.querySelector(".style-button"); // Set up event listeners
-                toggleStyle.addEventListener("click", ev => {
-                    const e =document.querySelector(".style-config")
-                    console.log(e)
-                    if (e.style.display === 'none') {
-                        e.style.display = 'flex'
-                    } else {
-                        e.style.display = 'none'
-                    }
-                });
-            </script>
-            {{ if .User }}
-                <a style="margin-left: 2rem;" href="/settings">{{.User.Name}}</a>
-            {{ else }}
-                <a  style="margin-left: 2rem;" href="/login">log in</a>
-            {{ end }}
         </div>
     </div>
-    <div class="level" style="margin-top:0rem; align-items: flex-start">
+    <div class="level" style="margin-top:0rem; align-items: flex-end">
         <nav class="level" style="
         overflow: hidden;
         width: 100%;
-        align-items: flex-start;
+        align-items: flex-end;
         margin-bottom: 1rem;
 ">
             <div class="level-left title-container">
                 <a href="/"><h1>The Webpage</h1></a>
+            </div>
+            <div class="level-left is-hidden-mobile is-flex" style="align-items: baseline;">
+                <form action="/search" method="get" style="margin-right: 1em;">
+                        <input class="text-input" type="textbox" name="q" value="Search"
+                               onfocus="if(this.value==='Search') {this.value=''}"
+                               onblur="if(this.value==='') {this.value='Search'}" />
+                </form>
             </div>
         </nav>
     </div>

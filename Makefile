@@ -4,5 +4,8 @@ build:
 deploy: build push
 	gcloud beta run deploy news --image gcr.io/russellsaw/news:latest
 
+deploy-worker: build push
+	gcloud beta run deploy news-background --image gcr.io/russellsaw/news:latest
+
 push:
 	docker push gcr.io/russellsaw/news

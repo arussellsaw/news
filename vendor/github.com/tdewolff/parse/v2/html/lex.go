@@ -1,12 +1,10 @@
 // Package html is an HTML5 lexer following the specifications at http://www.w3.org/TR/html5/syntax.html.
-package html // import "github.com/tdewolff/parse/html"
+package html
 
 import (
-	"io"
 	"strconv"
 
 	"github.com/tdewolff/parse/v2"
-	"github.com/tdewolff/parse/v2/buffer"
 )
 
 // TokenType determines the type of token, eg. a number or a semicolon.
@@ -60,7 +58,7 @@ func (tt TokenType) String() string {
 
 // Lexer is the state for the lexer.
 type Lexer struct {
-	r   *buffer.Lexer
+	r   *parse.Input
 	err error
 
 	rawTag Hash
@@ -71,9 +69,9 @@ type Lexer struct {
 }
 
 // NewLexer returns a new Lexer for a given io.Reader.
-func NewLexer(r io.Reader) *Lexer {
+func NewLexer(r *parse.Input) *Lexer {
 	return &Lexer{
-		r: buffer.NewLexer(r),
+		r: r,
 	}
 }
 
@@ -85,9 +83,14 @@ func (l *Lexer) Err() error {
 	return l.r.Err()
 }
 
-// Restore restores the NULL byte at the end of the buffer.
-func (l *Lexer) Restore() {
-	l.r.Restore()
+// Text returns the textual representation of a token. This excludes delimiters and additional leading/trailing characters.
+func (l *Lexer) Text() []byte {
+	return l.text
+}
+
+// AttrVal returns the attribute value when an AttributeToken was returned from Next.
+func (l *Lexer) AttrVal() []byte {
+	return l.attrVal
 }
 
 // Next returns the next Token. It returns ErrorToken when an error was encountered. Using Err() one can retrieve the error message.
@@ -108,15 +111,13 @@ func (l *Lexer) Next() (TokenType, []byte) {
 		} else if c != '>' && (c != '/' || l.r.Peek(1) != '>') {
 			return AttributeToken, l.shiftAttribute()
 		}
-		start := l.r.Pos()
+		l.r.Skip()
 		l.inTag = false
 		if c == '/' {
 			l.r.Move(2)
-			l.text = l.r.Lexeme()[start:]
 			return StartTagVoidToken, l.r.Shift()
 		}
 		l.r.Move(1)
-		l.text = l.r.Lexeme()[start:]
 		return StartTagCloseToken, l.r.Shift()
 	}
 
@@ -136,7 +137,8 @@ func (l *Lexer) Next() (TokenType, []byte) {
 			if l.r.Pos() > 0 {
 				if isEndTag || 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z' || c == '!' || c == '?' {
 					// return currently buffered texttoken so that we can return tag next iteration
-					return TextToken, l.r.Shift()
+					l.text = l.r.Shift()
+					return TextToken, l.text
 				}
 			} else if isEndTag {
 				l.r.Move(2)
@@ -158,7 +160,8 @@ func (l *Lexer) Next() (TokenType, []byte) {
 			}
 		} else if c == 0 && l.r.Err() != nil {
 			if l.r.Pos() > 0 {
-				return TextToken, l.r.Shift()
+				l.text = l.r.Shift()
+				return TextToken, l.text
 			}
 			return ErrorToken, nil
 		}
@@ -166,19 +169,9 @@ func (l *Lexer) Next() (TokenType, []byte) {
 	}
 }
 
-// Text returns the textual representation of a token. This excludes delimiters and additional leading/trailing characters.
-func (l *Lexer) Text() []byte {
-	return l.text
-}
-
-// AttrVal returns the attribute value when an AttributeToken was returned from Next.
-func (l *Lexer) AttrVal() []byte {
-	return l.attrVal
-}
-
 ////////////////////////////////////////////////////////////////
 
-// The following functions follow the specifications at http://www.w3.org/html/wg/drafts/html/master/syntax.html
+// The following functions follow the specifications at https://html.spec.whatwg.org/multipage/parsing.html
 
 func (l *Lexer) shiftRawText() []byte {
 	if l.rawTag == Plaintext {
@@ -261,6 +254,7 @@ func (l *Lexer) readMarkup() (TokenType, []byte) {
 		l.r.Move(2)
 		for {
 			if l.r.Peek(0) == 0 && l.r.Err() != nil {
+				l.text = l.r.Lexeme()[4:]
 				return CommentToken, l.r.Shift()
 			} else if l.at('-', '-', '>') {
 				l.text = l.r.Lexeme()[4:]
@@ -277,8 +271,10 @@ func (l *Lexer) readMarkup() (TokenType, []byte) {
 		l.r.Move(7)
 		for {
 			if l.r.Peek(0) == 0 && l.r.Err() != nil {
+				l.text = l.r.Lexeme()[9:]
 				return TextToken, l.r.Shift()
 			} else if l.at(']', ']', '>') {
+				l.text = l.r.Lexeme()[9:]
 				l.r.Move(3)
 				return TextToken, l.r.Shift()
 			}
@@ -338,9 +334,8 @@ func (l *Lexer) shiftStartTag() (TokenType, []byte) {
 			l.inTag = false
 			if h == Svg {
 				return SvgToken, data
-			} else {
-				return MathToken, data
 			}
+			return MathToken, data
 		}
 		l.rawTag = h
 	}
@@ -453,7 +448,7 @@ func (l *Lexer) shiftXml(rawTag Hash) []byte {
 			}
 		} else if c == 0 {
 			if l.r.Err() == nil {
-				l.err = parse.NewErrorLexer("unexpected null character", l.r)
+				l.err = parse.NewErrorLexer(l.r, "HTML parse error: unexpected NULL character")
 			}
 			return l.r.Shift()
 		} else {
@@ -468,7 +463,7 @@ func (l *Lexer) shiftXml(rawTag Hash) []byte {
 			break
 		} else if c == 0 {
 			if l.r.Err() == nil {
-				l.err = parse.NewErrorLexer("unexpected null character", l.r)
+				l.err = parse.NewErrorLexer(l.r, "HTML parse error: unexpected NULL character")
 			}
 			return l.r.Shift()
 		}

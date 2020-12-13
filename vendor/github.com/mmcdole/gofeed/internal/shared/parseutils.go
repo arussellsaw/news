@@ -3,12 +3,11 @@ package shared
 import (
 	"bytes"
 	"errors"
-	"fmt"
+	"html"
 	"regexp"
-	"strconv"
 	"strings"
 
-	"github.com/mmcdole/goxpp"
+	xpp "github.com/mmcdole/goxpp"
 )
 
 var (
@@ -21,48 +20,8 @@ var (
 	InvalidNumericReference = errors.New("invalid numeric reference")
 )
 
-// FindRoot iterates through the tokens of an xml document until
-// it encounters its first StartTag event.  It returns an error
-// if it reaches EndDocument before finding a tag.
-func FindRoot(p *xpp.XMLPullParser) (event xpp.XMLEventType, err error) {
-	for {
-		event, err = p.Next()
-		if err != nil {
-			return event, err
-		}
-		if event == xpp.StartTag {
-			break
-		}
-
-		if event == xpp.EndDocument {
-			return event, fmt.Errorf("Failed to find root node before document end.")
-		}
-	}
-	return
-}
-
-// NextTag iterates through the tokens until it reaches a StartTag or EndTag
-// It is similar to goxpp's NextTag method except it wont throw an error if
-// the next immediate token isnt a Start/EndTag.  Instead, it will continue to
-// consume tokens until it hits a Start/EndTag or EndDocument.
-func NextTag(p *xpp.XMLPullParser) (event xpp.XMLEventType, err error) {
-	for {
-		event, err = p.Next()
-		if err != nil {
-			return event, err
-		}
-
-		if event == xpp.StartTag || event == xpp.EndTag {
-			break
-		}
-
-		if event == xpp.EndDocument {
-			return event, fmt.Errorf("Failed to find NextTag before reaching the end of the document.")
-		}
-
-	}
-	return
-}
+const CDATA_START = "<![CDATA["
+const CDATA_END = "]]>"
 
 // ParseText is a helper function for parsing the text
 // from the current element of the XMLPullParser.
@@ -82,14 +41,44 @@ func ParseText(p *xpp.XMLPullParser) (string, error) {
 	result := text.InnerXML
 	result = strings.TrimSpace(result)
 
-	if strings.HasPrefix(result, "<![CDATA[") &&
-		strings.HasSuffix(result, "]]>") {
-		result = strings.TrimPrefix(result, "<![CDATA[")
-		result = strings.TrimSuffix(result, "]]>")
-		return result, nil
+	if strings.Contains(result, CDATA_START) {
+		return StripCDATA(result), nil
 	}
 
 	return DecodeEntities(result)
+}
+
+// StripCDATA removes CDATA tags from the string
+// content outside of CDATA tags is passed via DecodeEntities
+func StripCDATA(str string) string {
+	buf := bytes.NewBuffer([]byte{})
+
+	curr := 0
+
+	for curr < len(str) {
+
+		start := indexAt(str, CDATA_START, curr)
+
+		if start == -1 {
+			dec, _ := DecodeEntities(str[curr:])
+			buf.Write([]byte(dec))
+			return buf.String()
+		}
+
+		end := indexAt(str, CDATA_END, start)
+
+		if end == -1 {
+			dec, _ := DecodeEntities(str[curr:])
+			buf.Write([]byte(dec))
+			return buf.String()
+		}
+
+		buf.Write([]byte(str[start+len(CDATA_START) : end]))
+
+		curr = curr + end + len(CDATA_END)
+	}
+
+	return buf.String()
 }
 
 // DecodeEntities decodes escaped XML entities
@@ -106,60 +95,30 @@ func DecodeEntities(str string) (string, error) {
 			break
 		}
 
-		// Write and skip everything before it
 		buf.Write(data[:idx])
-		data = data[idx+1:]
+		data = data[idx:]
 
-		if len(data) == 0 {
-			return "", TruncatedEntity
+		// If there is only the '&' left here
+		if len(data) == 1 {
+			buf.Write(data)
+			return buf.String(), nil
 		}
 
 		// Find the end of the entity
 		end := bytes.IndexByte(data, ';')
 		if end == -1 {
-			return "", TruncatedEntity
+			// it's not an entitiy. just a plain old '&' possibly with extra bytes
+			buf.Write(data)
+			return buf.String(), nil
 		}
 
-		if data[0] == '#' {
-			// Numerical character reference
-			var str string
-			base := 10
-
-			if len(data) > 1 && data[1] == 'x' {
-				str = string(data[2:end])
-				base = 16
-			} else {
-				str = string(data[1:end])
-			}
-
-			i, err := strconv.ParseUint(str, base, 32)
-			if err != nil {
-				return "", InvalidNumericReference
-			}
-
-			buf.WriteRune(rune(i))
+		// Check if there is a space somewhere within the 'entitiy'.
+		// If there is then skip the whole thing since it's not a real entity.
+		if strings.Contains(string(data[1:end]), " ") {
+			buf.Write(data)
+			return buf.String(), nil
 		} else {
-			// Predefined entity
-			name := string(data[:end])
-
-			var c byte
-			switch name {
-			case "lt":
-				c = '<'
-			case "gt":
-				c = '>'
-			case "quot":
-				c = '"'
-			case "apos":
-				c = '\''
-			case "amp":
-				c = '&'
-			default:
-				return "", fmt.Errorf("unknown predefined "+
-					"entity &%s;", name)
-			}
-
-			buf.WriteByte(c)
+			buf.WriteString(html.UnescapeString(string(data[0 : end+1])))
 		}
 
 		// Skip the entity
@@ -193,4 +152,12 @@ func ParseNameAddress(nameAddressText string) (name string, address string) {
 		address = result[1]
 	}
 	return
+}
+
+func indexAt(str, substr string, start int) int {
+	idx := strings.Index(str[start:], substr)
+	if idx > -1 {
+		idx += start
+	}
+	return idx
 }

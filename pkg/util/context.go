@@ -63,7 +63,7 @@ func SetParam(ctx context.Context, key, value string) context.Context {
 	return ctx
 }
 
-func Params(ctx context.Context) map[string]string {
+func Params(ctx context.Context) map[string]interface{} {
 	container, ok := ctx.Value(paramKey("params")).(paramContainer)
 	if !ok {
 		return nil
@@ -71,7 +71,7 @@ func Params(ctx context.Context) map[string]string {
 
 	container.mu.Lock()
 	defer container.mu.Unlock()
-	params := make(map[string]string)
+	params := make(map[string]interface{})
 	for k, v := range container.params {
 		params[k] = v
 	}

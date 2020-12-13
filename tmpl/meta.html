@@ -1,0 +1,24 @@
+{{define "meta"}}
+    <title>{{.Title}}</title>
+    <!-- Primary Meta Tags -->
+    <meta name="title" content="{{.Title}}">
+    <meta name="description" content="{{.Description}}">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{.URL}}">
+    <meta property="og:title" content="{{.Title}}">
+    <meta property="og:description" content="{{.Description}}">
+    {{ if .Image}}
+        <meta property="og:image" content="{{.Image}}">
+    {{end}}
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="{{.URL}}">
+    <meta property="twitter:title" content="{{.Title}}">
+    <meta property="twitter:description" content="{{.Description}}">
+    {{ if .Image}}
+        <meta property="twitter:image" content="{{.Image}}">
+    {{end}}
+{{end}}

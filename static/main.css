@@ -156,7 +156,7 @@
     position: absolute;
     top: 3rem;
     float: right;
-    width: 80px;
+    width: 5rem;
     border: 1px solid var(--fg);
     border-radius: 3px;
     background-color: var(--bg);
@@ -165,7 +165,7 @@
     justify-content: space-between;
     padding: 0.5rem;
     align-items: center;
-    transform: translate(-80px, 0);
+    transform: translate(-1.5rem, 0);
 }
 
 .color-mode__btn svg {
@@ -205,11 +205,7 @@ a:hover {
 }
 
 @font-face {
-    font-family: "NewYorker";
-    src: url("/static/fonts/NewYorkerEngraved-zR1.woff");
-}
-
-@font-face {
+    font-display: swap;
     font-family: "OldEnglish";
     src: url("/static/fonts/OldEnglishFive-axyVg.woff");
 }
@@ -233,7 +229,7 @@ h1 {
 }
 
 h2 {
-    font-size: 3rem;
+    font-size: 2.5rem;
     font-weight: 600;
     word-wrap: break-spaces !important;
     color: var(--fg);
@@ -318,6 +314,14 @@ h5 {
     border-right: var(--thin-line);
     max-height: inherit;
 }
+
+.article-page {
+    border: none;
+    max-width: 50em;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 
 .divider {
     border-bottom: var(--line);
@@ -404,12 +408,13 @@ h5 {
     width: 100%;
     height: 2rem;
     border: none;
-    border-bottom: 2px solid var(--fg);
     margin-top: 1rem;
     font-family: var(--font);
     font-size: 16pt;
     color: var(--fg);
+    border-radius: 0;
     background-color: var(--bg);
+    border-bottom: 2px solid var(--fg);
 }
 
 .submit {
@@ -471,6 +476,7 @@ h5 {
 }
 
 .article-content img {
+    border-radius: 20px;
     width: 100%;
     height: auto;
     margin-top: 1rem;
@@ -506,3 +512,4 @@ figcaption p {
     margin-top: 1rem;
     border-radius: 20px;
 }
+

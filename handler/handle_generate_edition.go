@@ -34,7 +34,7 @@ func handleGenerateEdition(w http.ResponseWriter, r *http.Request) {
 
 	start := time.Now().Add(-72 * time.Hour)
 	end := time.Now()
-	articles, err := dao.GetArticlesByTime(ctx, start, end)
+	articles, _, err := dao.GetArticlesForOwner(ctx, "", start, end)
 	if err != nil {
 		httpError(ctx, w, "error getting articles", err)
 		return

@@ -28,7 +28,7 @@ type newsPage struct {
 func handleNews(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	t := template.New("frame.html")
-	t, err := t.ParseFiles("tmpl/frame.html", "tmpl/frontpage-1.html", "tmpl/section.html", "tmpl/article-tile.html")
+	t, err := t.ParseFiles("tmpl/frame.html", "tmpl/meta.html", "tmpl/frontpage-1.html", "tmpl/section.html", "tmpl/article-tile.html")
 	if err != nil {
 		slog.Error(ctx, "Error parsing template: %s", err)
 		http.Error(w, err.Error(), 500)
@@ -37,93 +37,95 @@ func handleNews(w http.ResponseWriter, r *http.Request) {
 
 	u := domain.UserFromContext(ctx)
 
-	p := newsPage{
-		base: base{
-			User: u,
-		},
-	}
+	var (
+		p = newsPage{
+			base: base{
+				User: u,
+				Meta: Meta{
+					Title:       "The Webpage",
+					Description: "The RSS Reader for the 20th Century",
+					Image:       "/static/images/preview.png",
+					URL:         r.URL.String(),
+				},
+			},
+		}
+		articles []domain.Article
+		sources  []domain.Source
+	)
+	var userID string
 	if u != nil {
-		articles, sources, err := dao.GetArticlesForOwner(ctx, u.ID, time.Now().Add(-48*time.Hour), time.Now())
-		if err != nil {
-			slog.Error(ctx, "Error getting edition: %s", err)
-			http.Error(w, err.Error(), 500)
-			return
+		userID = u.ID
+	}
+	articles, sources, err = dao.GetArticlesForOwner(ctx, userID, time.Now().Add(-48*time.Hour), time.Now())
+	if err != nil {
+		slog.Error(ctx, "Error getting edition: %s", err)
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	byFeedURL := make(map[string]domain.Source)
+	smap := make(map[string]struct{})
+	for _, s := range sources {
+		byFeedURL[s.FeedURL] = s
+		for _, cat := range s.Categories {
+			smap[cat] = struct{}{}
 		}
-		byFeedURL := make(map[string]domain.Source)
-		smap := make(map[string]struct{})
-		for _, s := range sources {
-			byFeedURL[s.FeedURL] = s
-			for _, cat := range s.Categories {
-				smap[cat] = struct{}{}
+	}
+	for cat := range smap {
+		p.Categories = append(p.Categories, cat)
+	}
+	sort.Strings(p.Categories)
+	p.DisableCache = true
+	newArticles := []domain.Article{}
+L:
+	for _, a := range articles {
+		content := ""
+		for _, e := range a.Content {
+			if !utf8.Valid([]byte(e.Value)) {
+				continue L
 			}
-		}
-		for cat := range smap {
-			p.Categories = append(p.Categories, cat)
-		}
-		sort.Strings(p.Categories)
-		p.DisableCache = true
-		newArticles := []domain.Article{}
-	L:
-		for _, a := range articles {
-			for _, e := range a.Content {
-				if !utf8.Valid([]byte(e.Value)) {
-					continue L
-				}
-			}
-			a.Source = byFeedURL[a.Source.FeedURL]
-			newArticles = append(newArticles, a)
-		}
-		p.Articles = newArticles
-
-		bySource := make(map[string][]domain.Article)
-		for _, a := range p.Articles {
-			bySource[a.Source.FeedURL] = append(bySource[a.Source.FeedURL], a)
-		}
-		newArticles = nil
-		for _, as := range bySource {
-			sort.Slice(as, func(i, j int) bool {
-				return as[i].Timestamp.After(as[j].Timestamp)
-			})
-		}
-		keys := []string{}
-		for k := range bySource {
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
-	top:
-		for _, key := range keys {
-			as, ok := bySource[key]
-			if !ok {
+			if e.Type != "text" {
 				continue
 			}
-			newArticles = append(newArticles, as[0])
-			bySource[key] = as[1:]
-			if len(bySource[key]) == 0 {
-				delete(bySource, key)
-				goto top
-			}
+			content = content + e.Value + " "
 		}
-		if len(bySource) != 0 {
+		a.Content = []domain.Element{{Type: "text", Value: content}}
+		a.Source = byFeedURL[a.Source.FeedURL]
+		newArticles = append(newArticles, a)
+	}
+	p.Articles = newArticles
+
+	bySource := make(map[string][]domain.Article)
+	for _, a := range p.Articles {
+		bySource[a.Source.FeedURL] = append(bySource[a.Source.FeedURL], a)
+	}
+	newArticles = nil
+	for _, as := range bySource {
+		sort.Slice(as, func(i, j int) bool {
+			return as[i].Timestamp.After(as[j].Timestamp)
+		})
+	}
+	keys := []string{}
+	for k := range bySource {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+top:
+	for _, key := range keys {
+		as, ok := bySource[key]
+		if !ok {
+			continue
+		}
+		newArticles = append(newArticles, as[0])
+		bySource[key] = as[1:]
+		if len(bySource[key]) == 0 {
+			delete(bySource, key)
 			goto top
 		}
-		p.Articles = newArticles
-	} else {
-		e, err := dao.GetEditionForTime(ctx, time.Now(), true)
-		if err != nil {
-			slog.Error(ctx, "Error getting edition: %s", err)
-			http.Error(w, err.Error(), 500)
-			return
-		}
-		if e == nil {
-			http.NotFound(w, r)
-			return
-		}
-		p.Categories = e.Categories
-		p.ID = e.ID
-		p.Title = e.Date
-		p.Name = e.Name
-		p.Articles = e.Articles
 	}
+	if len(bySource) != 0 {
+		goto top
+	}
+	p.Articles = newArticles
 
 	cat := r.URL.Query().Get("cat")
 	if cat != "" {
@@ -162,11 +164,6 @@ func handleNews(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		p.Articles = newArticles
-	}
-
-	for i := range p.Articles {
-		p.Articles[i].Description = removeHTMLTag(p.Articles[i].Description)
-		p.Articles[i].Title = removeHTMLTag(p.Articles[i].Title)
 	}
 
 	err = t.Execute(w, &p)
@@ -224,16 +221,16 @@ func (c *layoutCache) Set(editionID string, i int, a domain.Article) {
 	c.mu.Unlock()
 }
 
-func (e *newsPage) GetArticle(size int, image bool) domain.Article {
+func (e *newsPage) GetArticle(size int, image bool) *domain.Article {
 	if e.claimed == nil {
 		e.claimed = make(map[string]bool)
 	}
 	if a, ok := lc.Get(e.ID, e.cacheIndex); ok && !e.DisableCache {
 		e.cacheIndex++
-		return a
+		return &a
 	}
 top:
-	candidates := []domain.Article{}
+	var candidate domain.Article
 	for _, a := range e.Articles {
 		if a.Size() >= size {
 			if a.ImageURL == "" && image {
@@ -242,23 +239,22 @@ top:
 			if e.claimed[a.ID] {
 				continue
 			}
-			candidates = append(candidates, a)
+			if a.Timestamp.After(candidate.Timestamp) {
+				candidate = a
+			}
 		}
 	}
-	if len(candidates) == 0 && size > 0 {
+	if candidate.ID == "" && size > 0 {
 		size -= 100
 		goto top
-	} else if len(candidates) == 0 {
+	} else if candidate.ID == "" {
 		if image {
 			image = false
 			goto top
 		}
-		return domain.Article{}
+		return &domain.Article{}
 	}
-	sort.Slice(candidates, func(i, j int) bool {
-		return candidates[i].Timestamp.Before(candidates[i].Timestamp)
-	})
-	a := candidates[0]
+	a := candidate
 	a.ImageURL = func() string {
 		if image {
 			return a.ImageURL
@@ -270,6 +266,16 @@ top:
 	if !e.DisableCache {
 		lc.Set(e.ID, e.cacheIndex, a)
 	}
+	a.Content = capContent(a.Content, size)
 	e.cacheIndex++
-	return a
+	return &a
+}
+
+func capContent(c []domain.Element, size int) []domain.Element {
+	v := c[0].Value
+	if len(v) > size+200 {
+		v = v[:size+200]
+	}
+	c[0].Value = v
+	return c
 }

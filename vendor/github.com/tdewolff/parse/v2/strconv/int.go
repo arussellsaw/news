@@ -1,10 +1,10 @@
-package strconv // import "github.com/tdewolff/parse/strconv"
+package strconv
 
 import (
 	"math"
 )
 
-// Int parses a byte-slice and returns the integer it represents.
+// ParseInt parses a byte-slice and returns the integer it represents.
 // If an invalid character is encountered, it will stop there.
 func ParseInt(b []byte) (int64, int) {
 	i := 0
@@ -13,6 +13,7 @@ func ParseInt(b []byte) (int64, int) {
 		neg = b[0] == '-'
 		i++
 	}
+	start := i
 	n := uint64(0)
 	for i < len(b) {
 		c := b[i]
@@ -26,6 +27,9 @@ func ParseInt(b []byte) (int64, int) {
 		}
 		i++
 	}
+	if i == start {
+		return 0, 0
+	}
 	if !neg && n > uint64(math.MaxInt64) || n > uint64(math.MaxInt64)+1 {
 		return 0, 0
 	} else if neg {
@@ -34,6 +38,7 @@ func ParseInt(b []byte) (int64, int) {
 	return int64(n), i
 }
 
+// LenInt returns the written length of an integer.
 func LenInt(i int64) int {
 	if i < 0 {
 		if i == -9223372036854775808 {

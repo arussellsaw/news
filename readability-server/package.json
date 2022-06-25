@@ -7,7 +7,7 @@
     "@mozilla/readability": "^0.3.0",
     "dompurify": "^2.2.2",
     "jsdom": "^16.4.0",
-    "node-fetch": "^2.6.1"
+    "node-fetch": "^2.6.7"
   },
   "scripts": {
     "start": "node ./index.js"
